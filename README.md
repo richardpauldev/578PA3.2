@@ -13,7 +13,7 @@ The goal of this assignment is to use consensus to build a fault-tolerant replic
 
 3. **Custom protocol** (Custom): Your own coordination protocol possibly using a globally accessible logically centralized file system or database for coordination (an option analogous to #1 but not forcing you to use Zookeeper).
 
-### Pre-requisites ###
+### Prerequisites ###
 
 1. Java is required; Linux strongly recommended but not necessary for any of the three options above;
 
@@ -21,7 +21,7 @@ The goal of this assignment is to use consensus to build a fault-tolerant replic
 
 3. Completion of [consensus and RSM tutorials (Part 1)](https://bitbucket.org/distrsys/consensus-rsm-tutorials/src/master/README.md?mode=edit&at=master).
 
-You are already familiar with the application environment and background here having completed pre-requisite #2 above. The goal in this assignment is to make your previous replicated, consistent, non-fault-tolerant datastore fault-tolerant now using one of the three options listed in Goal above.
+You are already familiar with the application environment and background here having completed prerequisite #2 above. The goal in this assignment is to make your previous replicated, consistent, non-fault-tolerant datastore fault-tolerant now using one of the three options listed in Goal above.
 
 ***
 
