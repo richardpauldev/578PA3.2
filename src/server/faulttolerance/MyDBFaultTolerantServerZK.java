@@ -25,9 +25,8 @@ import java.net.InetSocketAddress;
  * Make sure that both a single instance of Cassandra and a single Zookeeper
  * server are running on their default ports before testing.
  * <p>
- * If a special request containing a single string called "CHECKPOINT" is
- * received, nodes must checkpoint their state and discard any accumulated
- * in-memory state from before the checkpoint request.
+ * You can not store in-memory information about request logs for more than
+ * {@link #MAX_LOG_SIZE} requests.
  */
 public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 
@@ -38,9 +37,26 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 	 */
 	public static final int SLEEP = 1000;
 
-	// Used only by gigapaxos, not zookeeper.
-	public static final String APP_NAME = "FTCassandra";
+	/**
+	 * Maximum permitted size of any collection that is used to maintain
+	 * request-specific state, i.e., you can not maintain state for more than
+	 * MAX_LOG_SIZE requests (in memory or on disk). This constraint exists to
+	 * ensure that your logs don't grow unbounded, which forces
+	 * checkpointing to be implemented.
+	 */
+	public static final int MAX_LOG_SIZE = 400;
 
+	/**
+	 *
+	 * @param nodeConfig Server name/address configuration information read
+	 *                      from conf/servers.properties.
+	 * @param myID The name of the keyspace to connect to, also the name of
+	 *                the server itself. You can not connect to any other
+	 *                keyspace if using Zookeeper.
+	 * @param isaDB The socket address of the backend datastore to which you
+	 *                 need to establish a session.
+	 * @throws IOException
+	 */
 	public MyDBFaultTolerantServerZK(NodeConfig<String> nodeConfig, String
 			myID, InetSocketAddress isaDB) throws IOException {
 		super(new InetSocketAddress(nodeConfig.getNodeAddress(myID),
