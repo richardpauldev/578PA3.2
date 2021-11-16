@@ -63,8 +63,16 @@ public class GraderCommonSetup {
 	protected static final boolean REDIRECT_IO_TO_FILE = false;
 
 
-	// True only for testing use by instructor
+	// True only for testing use by instructor. It can be used to start
+	// gigapaxos servers in a single JVM if set to true and PROCESS_MODE is
+	// set to false.
 	protected static boolean DEFER_SERVER_CREATION_TO_CHILD = false;
+
+	// If true, replicas will start with whatever DB table state they had
+	// just before they last crashed. Should be false while submitting.
+	// But you can set it to true for debugging/testing tests that don't
+	// involve checkpointing.
+	protected static boolean DISABLE_RECOVERING_WITH_EMPTY_STATE = false;
 
 
 	/* May need to prefix path with "consistency" folder if starting
@@ -275,9 +283,9 @@ public class GraderCommonSetup {
 			if (!results[0].equals(results[i])) {
 				match = false;
 				message += "\n" + comparedServers[0] + ":" + results[0] + "\n " +
-						"" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "  "
-						+ "!=\n" + comparedServers[i] + ":" + results[i] +
-						"\n";
+						"" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" +
+						"" + "" + "" + "" + "" + "" + "" + "" + "  " + "!=\n"
+						+ comparedServers[i] + ":" + results[i] + "\n";
 			}
 			i++;
 		}
@@ -403,11 +411,9 @@ public class GraderCommonSetup {
 	protected static String getCreateTableWithList(String table, String
 			keyspace) {
 		return "create table if not exists " + keyspace + "." + table + " (id " +
-				"" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + ""
-				+ "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" +
-				"" + "" + "" + "" + "" + "" + "" + "int," + " " + "events" + "" +
-				" " + "list<int>, " + "primary " + "" + "key" + " " + "" + ""
-				+ "" + "(id)" + ");";
+				"" + "" + "" + "" + "" + "" + "" + "" + "" + "int," + " " +
+				"events" + "" + "" + " " + "list<int>, " + "primary " + "" +
+				"key" + " " + "" + "" + "" + "(id)" + ");";
 	}
 
 	protected static String insertRecordIntoTableCmd(int key, String table) {
@@ -443,21 +449,32 @@ public class GraderCommonSetup {
 	private static void startReplicatedServersSingleJVM() throws IOException {
 		int i = 0;
 		for (String node : nodeConfigServer.getNodeIDs()) {
-			replicatedServers[i++] = STUDENT_TESTING_MODE ? new
-					MyDBReplicatedServer(nodeConfigServer, node,
-					DEFAULT_DB_ADDR) :
+			replicatedServers[i++] = STUDENT_TESTING_MODE ?
+					(TEST_FAULT_TOLERANCE ? new MyDBFaultTolerantServerZK
+							(nodeConfigServer, node, DEFAULT_DB_ADDR) : new
+							MyDBReplicatedServer(nodeConfigServer, node,
+							DEFAULT_DB_ADDR)) :
 
 					// instructor mode
-					(SingleServer) getInstance(getConstructor("server" + "" +
-							".AVDBReplicatedServer", NodeConfig.class, String
-							.class, InetSocketAddress.class),
-							nodeConfigServer, node, DEFAULT_DB_ADDR);
+					(SingleServer) getInstance(getConstructor
+							(AVDBReplicatedServer.class.getName(), NodeConfig
+									.class, String.class, InetSocketAddress
+									.class), nodeConfigServer, node,
+							DEFAULT_DB_ADDR);
 		}
 	}
 
 
-	private static void startReplicatedServers() throws IOException {
-		// creates instances of replicated servers in single JVM
+	private static void startReplicatedServers() throws IOException,
+			InterruptedException {
+		if (TEST_FAULT_TOLERANCE && !DISABLE_RECOVERING_WITH_EMPTY_STATE)
+			createEmptyTables();
+
+		// creates instances of replicated servers in single JVM. This option
+		// should not be used for near-final-testing fault tolerance because we
+		// don't have a way to "crash" servers except in PROCESS_MODE. But
+		// PROCESS_MODE can be disabled if you wish to debug graceful mode
+		// execution.
 		if (!PROCESS_MODE) startReplicatedServersSingleJVM();
 			// creates instances of replicated servers in separate processes
 			// provided if it is not meant to be deferred to child

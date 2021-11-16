@@ -45,10 +45,6 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 	@BeforeClass
 	public static void setupFT() throws IOException, InterruptedException {
 		if (GIGAPAXOS_MODE) {
-			// Need to create tables before gigapaxos servers wake up as they
-			// may issue DB requests while rolling forward from the most
-			// recent checkpoint during recovery
-			createEmptyTables();
 			// start gigapaxos servers
 			setupGP();
 			System.out.println("\nWaiting (" + (PER_SERVER_BOOTSTRAP_TIME *
@@ -57,18 +53,20 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 			// sleep to allow servers to bootup
 			Thread.sleep(PER_SERVER_BOOTSTRAP_TIME * (servers.length));
 		}
-
-		createEmptyTables();
 	}
 
 	private static Set<ReconfigurableNode> gpServers = new
 			HashSet<ReconfigurableNode>();
 
-	private static void setupGP() throws IOException {
+	private static void setupGP() throws IOException, InterruptedException {
 		System.setProperty("gigapaxosConfig", "conf/gigapaxos.properties");
 		System.setProperty("java.util.logging.config.file", "logging" + "" +
 				"" + ".properties");
 		if (DEFER_SERVER_CREATION_TO_CHILD) {
+			// Need to create tables before gigapaxos servers wake up as they
+			// are expected to issue DB requests while rolling forward from the
+			// most recent checkpoint during recovery
+			createEmptyTables();
 			int i = 0;
 			for (String node : servers) {
 				Set<ReconfigurableNode> created = (ReconfigurableNode.main1
@@ -321,7 +319,7 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 		int key = (fixedKeyKnownToExist = ThreadLocalRandom.current().nextInt
 				());
 		client.send(serverMap.get((String) Util.getRandomOtherThan(serverMap
-					.keySet(), crashed)), getCommand(insertRecordIntoTableCmd(key,
+				.keySet(), crashed)), getCommand(insertRecordIntoTableCmd(key,
 				DEFAULT_TABLE_NAME)));
 
 		for (int i = 0; i < servers.length * 3; i++) {
