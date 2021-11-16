@@ -21,7 +21,7 @@ The goal of this assignment are to use consensus to build a fault-tolerant repli
 
 3. Completion of [consensus and RSM tutorials (Part 1)](https://bitbucket.org/distrsys/consensus-rsm-tutorials/src/master/README.md?mode=edit&at=master).
 
-You are already familiar with the application environment andd background here having completed pre-requisite #2 above. The goal in this assignment is to make your previous replicated, consistent, non-fault-tolerant datastore fault-tolerant now using one of the three options in Goal above.
+You are already familiar with the application environment and background here having completed pre-requisite #2 above. The goal in this assignment is to make your previous replicated, consistent, non-fault-tolerant datastore fault-tolerant now using one of the three options in Goal above.
 
 ***
 
