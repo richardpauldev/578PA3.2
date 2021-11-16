@@ -93,5 +93,11 @@ You are guinea pigs for this assignment in its current incarnation that is being
 
 # Tips, Troubleshooting, FAQs #
 1. In addition to the detailed documentation, there are several handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing and debugging options.
-2. More based on your FAQs.
+2. You don't need any source code for either Zookeeper or Gigapaxos.
+3. You don't need any binaries other than the ones already included.
+4. You can do this assignment on Windows as well as it does not rely on any Gigapaxos on Zookeeper shell scripts, only Java.
+5. The RSM option is probably the fewest lines of code followed by Zookeeper followed by the Custom option. 
+6. Do NOT try to implementing your own consensus protocol as part of the Custom option as it is an overkill especially since the assignment allows you to use a global assumed-fault-tolerant storage system (file system or database) for coordination anyway.
+
+More based on your FAQs.
 
