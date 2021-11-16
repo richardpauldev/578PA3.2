@@ -92,7 +92,7 @@ From here on, you need to read the documentation of each test, understand why it
 You are guinea pigs for this assignment in its current incarnation that is being test-driven for the first time, so some kinks will probably be discovered. Corrections or clarifications to this document or to the source code will be listed below.
 
 # Tips, Troubleshooting, FAQs #
-1. In addition to the detailed documentation, there are several handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing and debugging options.
+1. In addition to the source documentation, there are several handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing/debugging options.
 2. You don't need any source code for either Zookeeper or Gigapaxos.
 3. You don't need any binaries other than the ones already included.
 4. You can do this assignment on Windows as well as it does not rely on any Gigapaxos on Zookeeper shell scripts, only Java.
