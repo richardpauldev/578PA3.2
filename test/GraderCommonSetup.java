@@ -90,7 +90,7 @@ public class GraderCommonSetup {
 	protected static boolean TEST_FAULT_TOLERANCE = true;
 
 	// Must be true when used by students
-	protected static final boolean STUDENT_TESTING_MODE = false;
+	protected static final boolean STUDENT_TESTING_MODE = true;
 
 	// This is the table storing all server-side state. By assumption, the
 	// state in this table in the keyspace corresponding to each replica is
