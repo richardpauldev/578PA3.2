@@ -435,7 +435,7 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 			InterruptedException {
 
 		// issue enough requests to stress test checkpointing
-		for (int i = 0; i < MAX_LOG_SIZE + servers.length; i++) {
+		for (int i = 0; i < MAX_LOG_SIZE*2 + servers.length; i++) {
 			client.send(serverMap.get(servers[0]), getCommand
 					(updateRecordOfTableCmd(fixedKeyKnownToExist,
 							DEFAULT_TABLE_NAME)));
