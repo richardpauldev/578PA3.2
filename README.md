@@ -66,7 +66,7 @@ Your implementation must respect the following constraints, but these are not me
 	
 	***
 
-# Getting Started #
+# Getting started #
 
 Start by running your consistency-only replicated server (or using the [sample solution](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/AVDBReplicatedServer.java) with [STUDENT_TESTING_MODE`=false`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-93)) by running GraderConsistency with [`TEST_FAULT_TOLERANCE`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-90) set to `false`. You should see the old consistency-only tests pass.
 
@@ -76,7 +76,7 @@ From here on, you need to read the documentation of each test, understand why it
 
 ***
 
-# Submission Instructions #
+# Submission instructions #
 
 1. Submit a Bitbucket or Github repository forked from this repository to Gradescope keeping in mind the following:
 
@@ -88,10 +88,10 @@ From here on, you need to read the documentation of each test, understand why it
 	
 ***
 
-# Post-release Corrections #
+# Post-release corrections #
 You are guinea pigs for this assignment in its current incarnation that is being test-driven for the first time, so some kinks will probably be discovered. Corrections or clarifications to this document or to the source code will be listed below.
 
-# Tips, Troubleshooting, FAQs #
+# Tips, troubleshooting, FAQs #
 1. In addition to the source documentation, there are several handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing/debugging options.
 2. You don't need any source code for either Zookeeper or Gigapaxos.
 3. You don't need any binaries other than the ones already included.
