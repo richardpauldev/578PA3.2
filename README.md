@@ -80,8 +80,9 @@ From here on, you need to read the documentation of each test, understand why it
 
 1. Submit a Bitbucket or Github repository forked from this repository to Gradescope keeping in mind the following:
 
-    1. Only files in the `faulttolerance` package should contain your source changes. Any changes to any other source or test files will be ignored. 
-	2. A design document (up to but not necessarily 3 pages long) 
+    1. Only files in the `faulttolerance` package should contain your source changes. Any changes to any other source or test files will be ignored.
+	2. Include detailed documentation in your code files and follow good coding practices (helpful names, minimal privilege, thoughtfully handling exceptions beyond just printing a stack trace, defensive testing of your code, etc.) 
+	3. A design document (up to but not necessarily 3 pages long) 
 		* explaining your design; 
 		* explicitly noting how many tests passed in your testing; 
 		* conceptual explanation for failing tests, i.e., understand and explain why the test is failing (possibly including sample output) and what you think you need to implement to bug-fix or complete your design.
@@ -89,7 +90,7 @@ From here on, you need to read the documentation of each test, understand why it
 ***
 
 # Post-release corrections #
-You are guinea pigs for this assignment in its current incarnation that is being test-driven for the first time, so some kinks will probably be discovered. Corrections or clarifications to this document or to the source code will be listed below.
+You are guinea pigs for this newly revamped assignment that in its current incarnation is being test-driven for the first time, so some kinks will probably be discovered. Corrections or clarifications to this document or to the source code will be listed below.
 
 # Tips, troubleshooting, FAQs #
 1. In addition to the source documentation, there are several handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing/debugging options.
@@ -98,6 +99,7 @@ You are guinea pigs for this assignment in its current incarnation that is being
 4. You can do this assignment on Windows as well as it does not rely on any Gigapaxos on Zookeeper shell scripts, only Java.
 5. The RSM option is probably the fewest lines of code followed by Zookeeper followed by the Custom option. 
 6. Do NOT try to implementing your own consensus protocol as part of the Custom option as it is an overkill especially since the assignment allows you to use a global assumed-fault-tolerant storage system (file system or database) for coordination anyway.
+7. As always, the tests or config files provided are not intended to be exhaustive, and we may test your code with more stressful tests or configurations.
 
 More based on your FAQs.
 
