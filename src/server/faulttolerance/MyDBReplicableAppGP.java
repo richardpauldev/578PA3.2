@@ -56,6 +56,7 @@ public class MyDBReplicableAppGP implements Replicable {
 	 *
 	 * @param args Singleton array whose args[0] specifies the keyspace in the
 	 *             backend data store to which this server must connect.
+	 *             Optional args[1] and args[2]
 	 * @throws IOException
 	 */
 	public MyDBReplicableAppGP(String[] args) throws IOException {
