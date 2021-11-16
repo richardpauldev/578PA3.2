@@ -46,6 +46,8 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 	 */
 	public static final int MAX_LOG_SIZE = 400;
 
+	public static final int DEFAULT_PORT = 2181;
+
 	/**
 	 *
 	 * @param nodeConfig Server name/address configuration information read
