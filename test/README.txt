@@ -23,7 +23,11 @@ that you can't "abuse" static variables (that are global variables in Java) to
 share distributed information without distributed message-passing. Disabling
 PROCESS_MODE may be easier for debugging (but with the caveat that step-through
 debuggers are poor for concurrency/distributedness because they change the very
-thing being observed in a Heisenbergian mannner).
+thing being observed in a Heisenbergian manner).
+
+Keep in mind however that there is no way to "crash" a server without
+PROCESS_MODE (that uses a kill signal), so you need it to be true for
+the fault tolerance tests to get meaningfully activated.
 
 + Zookeeper vs. Gigapaxos: The ZK_NOT_GP in GraderCommonSetup means Zookeeper mode,
 not Gigapaxos mode. You have to fix one or the other for an implementation
