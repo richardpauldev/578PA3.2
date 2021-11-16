@@ -5,7 +5,7 @@
 # Overview #
 
 ### Goal ###
-The goal of this assignment are to use consensus to build a fault-tolerant replicated datastore application using one of the following three options (two for extra credit):
+The goal of this assignment is to use consensus to build a fault-tolerant replicated datastore application using one of the following three options (two for extra credit):
 
 1. **Coordination server** (Zookeeper): A coordination protocol using Zookeeper as a logically centralized service accessible to all replicas;
 
