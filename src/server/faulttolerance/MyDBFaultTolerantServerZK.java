@@ -3,6 +3,7 @@ package server.faulttolerance;
 import edu.umass.cs.nio.interfaces.NodeConfig;
 import edu.umass.cs.nio.nioutils.NIOHeader;
 import edu.umass.cs.nio.nioutils.NodeConfigUtils;
+import edu.umass.cs.utils.Util;
 import server.AVDBReplicatedServer;
 import server.ReplicatedServer;
 
@@ -42,21 +43,22 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 	 * request-specific state, i.e., you can not maintain state for more than
 	 * MAX_LOG_SIZE requests (in memory or on disk). This constraint exists to
 	 * ensure that your logs don't grow unbounded, which forces
-	 * checkpointing to be implemented.
+	 * checkpointing to
+	 * be implemented.
 	 */
 	public static final int MAX_LOG_SIZE = 400;
 
 	public static final int DEFAULT_PORT = 2181;
 
 	/**
-	 *
 	 * @param nodeConfig Server name/address configuration information read
-	 *                      from conf/servers.properties.
-	 * @param myID The name of the keyspace to connect to, also the name of
-	 *                the server itself. You can not connect to any other
-	 *                keyspace if using Zookeeper.
-	 * @param isaDB The socket address of the backend datastore to which you
-	 *                 need to establish a session.
+	 *                      from
+	 *                   conf/servers.properties.
+	 * @param myID       The name of the keyspace to connect to, also the name
+	 *                   of the server itself. You can not connect to any other
+	 *                   keyspace if using Zookeeper.
+	 * @param isaDB      The socket address of the backend datastore to which
+	 *                   you need to establish a session.
 	 * @throws IOException
 	 */
 	public MyDBFaultTolerantServerZK(NodeConfig<String> nodeConfig, String
@@ -97,14 +99,17 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 	/**
 	 * @param args args[0] must be server.properties file and args[1] must be
 	 *             myID. The server prefix in the properties file must be
-	 *             ReplicatedServer.SERVER_PREFIX.
+	 *             ReplicatedServer.SERVER_PREFIX. Optional args[2] if
+	 *             specified
+	 *             will be a socket address for the backend datastore.
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
 		new AVDBReplicatedServer(NodeConfigUtils.getNodeConfigFromFile
 				(args[0], ReplicatedServer.SERVER_PREFIX, ReplicatedServer
-						.SERVER_PORT_OFFSET), args[1], new InetSocketAddress
-				("localhost", 9042));
+						.SERVER_PORT_OFFSET), args[1], args.length > 2 ? Util
+				.getInetSocketAddressFromString(args[2]) : new
+				InetSocketAddress("localhost", 9042));
 	}
 
 }
