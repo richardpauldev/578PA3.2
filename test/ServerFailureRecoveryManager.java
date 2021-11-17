@@ -26,7 +26,6 @@ import java.util.logging.Logger;
 public class ServerFailureRecoveryManager {
 	protected static final Logger log = Logger.getLogger
 			(ServerFailureRecoveryManager.class.getName());
-	private static NodeConfig<String> nodeConfigServer = null;
 	private static Map<String, Process> serverPIDs = new ConcurrentHashMap<>();
 	private static ProcessBuilder processBuilder = new ProcessBuilder()
 			.inheritIO();
@@ -39,9 +38,6 @@ public class ServerFailureRecoveryManager {
 	private final static ScheduledExecutorService scheduler = Executors
 			.newScheduledThreadPool(1);
 
-	static void init(NodeConfig<String> nc) {
-		ServerFailureRecoveryManager.nodeConfigServer = nc;
-	}
 
 	private static String getJavaCommand() {
 		if (JAVA_PATH != null) return JAVA_PATH;
@@ -192,7 +188,7 @@ public class ServerFailureRecoveryManager {
 
 	// convenience method
 	protected synchronized static void startAllServers() throws IOException {
-		for (String node : nodeConfigServer.getNodeIDs()) {
+		for (String node : GraderCommonSetup.nodeConfigServer.getNodeIDs()) {
 			startServer(node);
 		}
 		System.out.println("Started all servers; serverProcesses=" +
@@ -338,7 +334,7 @@ public class ServerFailureRecoveryManager {
 
 	protected static void startRandomFailureRecovery(long mttf, long mttr) {
 		KillRecover.stop = false;
-		for (String server : nodeConfigServer.getNodeIDs())
+		for (String server : GraderCommonSetup.nodeConfigServer.getNodeIDs())
 			scheduler.schedule(new KillRecover(server, mttf, mttr), perturb
 					(mttf), TimeUnit.MILLISECONDS);
 	}
@@ -358,7 +354,8 @@ public class ServerFailureRecoveryManager {
 	}
 
 	protected static String getRandomServer() {
-		String[] servers = nodeConfigServer.getNodeIDs().toArray(new
+		String[] servers = GraderCommonSetup.nodeConfigServer.getNodeIDs()
+				.toArray(new
 				String[0]);
 		return servers[(int) (Math.random() * servers.length)];
 	}
@@ -367,7 +364,7 @@ public class ServerFailureRecoveryManager {
 		Set<String> hitList = new HashSet<String>();
 		while (hitList.size() < numServers)
 			// ensure distinct random servers
-			hitList.add((String) Util.getRandomOtherThan(nodeConfigServer
+			hitList.add((String) Util.getRandomOtherThan(GraderCommonSetup.nodeConfigServer
 					.getNodeIDs(), hitList));
 		return hitList;
 	}
@@ -387,18 +384,13 @@ public class ServerFailureRecoveryManager {
 		throw new RuntimeException("Asserts not enabled");
 	}
 
-	protected static void setNodeConfigServer(NodeConfig<String> nc) {
-		nodeConfigServer = nc;
-
-	}
-
 	// code to test ourself, i.e., the methods above.
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
 
 		try {
 			checkAssertsEnabled();
-			nodeConfigServer = NodeConfigUtils.getNodeConfigFromFile
+			NodeConfig<String>nodeConfigServer = NodeConfigUtils.getNodeConfigFromFile
 					(GraderConsistency.CONFIG_FILE, ReplicatedServer
 							.SERVER_PREFIX, ReplicatedServer
 							.SERVER_PORT_OFFSET);

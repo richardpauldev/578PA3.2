@@ -155,10 +155,6 @@ public class GraderCommonSetup {
 					"'replication_factor' : '1'};");
 		}
 
-		// Servers may be set up either as instantiated objects all within a
-		// single JVM or as separate processes.
-		startReplicatedServers();
-
 		// setup frequently used information
 		int i = 0;
 		servers = new String[nodeConfigServer.getNodeIDs().size()];
@@ -169,7 +165,10 @@ public class GraderCommonSetup {
 			serverMap.put(node, new InetSocketAddress(nodeConfigClient
 					.getNodeAddress(node), nodeConfigClient.getNodePort
 					(node)));
-		Thread.sleep(SLEEP);
+
+		// Servers may be set up either as instantiated objects all within a
+		// single JVM or as separate processes.
+		startReplicatedServers();
 	}
 
 	//////////////////////// Test watching setup ///////////////////
