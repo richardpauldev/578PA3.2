@@ -415,17 +415,8 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 
 
 	/**
-	 * This test issues a checkpoint request to one replica and expects
-	 * non-Gigapaxos replicated server implementations to create a checkpoint
-	 * the entire {@link GraderFaultTolerance#DEFAULT_TABLE_NAME} state in
-	 * stable storage and return a checkpoint handle. This handle when supplied
-	 * in a RESTORE request should restore that state, so the format of the
-	 * handle can be whatever. It can either be the entire table state exported
-	 * as a string or exported to a file with the filename being returned as
-	 * the
-	 * handle.
-	 * <p>
-	 * This test is relevant only for non-Gigapaxos-based implementations.
+	 * This test tests checkpointing of state and restoration upon recovery
+	 * by issuing more than MAX_LOG_SIZE requests.
 	 *
 	 * @throws IOException
 	 * @throws InterruptedException
@@ -439,6 +430,10 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 			client.send(serverMap.get(servers[0]), getCommand
 					(updateRecordOfTableCmd(fixedKeyKnownToExist,
 							DEFAULT_TABLE_NAME)));
+			// small sleep to slow down because gigapaxos is optimized to
+			// batch request flurries and may effectively see fewer
+			// requests.
+			Thread.sleep(2);
 		}
 		ServerFailureRecoveryManager.mercilesslySlaughterAll();
 		ServerFailureRecoveryManager.startAllServers();
