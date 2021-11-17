@@ -5,7 +5,7 @@
 # Overview #
 
 ### Goal ###
-The goal of this assignment are to use consensus to build a fault-tolerant replicated datastore application using one of the following three options:
+The goal of this assignment is to use consensus to build a fault-tolerant replicated datastore application using one of the following three options (two for extra credit):
 
 1. **Coordination server** (Zookeeper): A coordination protocol using Zookeeper as a logically centralized service accessible to all replicas;
 
@@ -13,7 +13,7 @@ The goal of this assignment are to use consensus to build a fault-tolerant repli
 
 3. **Custom protocol** (Custom): Your own coordination protocol possibly using a globally accessible logically centralized file system or database for coordination (an option analogous to #1 but not forcing you to use Zookeeper).
 
-### Pre-requisites ###
+### Prerequisites ###
 
 1. Java is required; Linux strongly recommended but not necessary for any of the three options above;
 
@@ -21,7 +21,7 @@ The goal of this assignment are to use consensus to build a fault-tolerant repli
 
 3. Completion of [consensus and RSM tutorials (Part 1)](https://bitbucket.org/distrsys/consensus-rsm-tutorials/src/master/README.md?mode=edit&at=master).
 
-You are already familiar with the application environment andd background here having completed pre-requisite #2 above. The goal in this assignment is to make your previous replicated, consistent, non-fault-tolerant datastore fault-tolerant now using one of the three options in Goal above.
+You are already familiar with the application environment and background here having completed prerequisite #2 above. The goal in this assignment is to make your previous replicated, consistent, non-fault-tolerant datastore fault-tolerant now using one of the three options listed in Goal above.
 
 ***
 
@@ -53,7 +53,7 @@ The test code (what used to be [`Grader`](https://bitbucket.org/avenka/590cc/src
 # Constraints #
 Your implementation must respect the following constraints, but these are not meant to be exhaustive, so if in doubt, ask.
 
-1. Pick exactly one of the three high-level options in the Goal section above; do not mix multiple options.
+1. Pick exactly one of the three high-level options in the Goal section above; do not mix multiple options. You may however implement two entirely separate options for extra credit (see constraint #5 below).
 
 2. If using the Zookeeper option, keep in mind the following (also documented at the top of [`MyDBFaultTolerantServerZK`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/faulttolerance/MyDBFaultTolerantServerZK.java)):
 	1. You can not use any other form of coordination (like the file system or a database) between servers other than through Zookeeper. 
@@ -63,35 +63,47 @@ Your implementation must respect the following constraints, but these are not me
 3. For all options, you can assume that a single Cassandra instance is running at the address specified in [MyDBFaultTolerantServerZK#main](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/src/server/faulttolerance/MyDBFaultTolerantServerZK.java#lines-107).
 
 4. For all options, you can not maintain any in-memory or on-disk data structure containing more than [`MAX_LOG_SIZE (default 400)`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/src/server/faulttolerance/MyDBFaultTolerantServerZK.java#lines-49) requests.
+
+5. You may for extra credit implement two of the three options and if you do so, one of the two options must be GigaPaxos.
+
+6. You shouldn't need any external libraries not already included, but you are welcome to check with us and use external libraries that would make your implementation less onerous whille preserving the spirit of the assignmennt.
 	
 	***
 
-# Getting Started #
+# Getting started #
 
 Start by running your consistency-only replicated server (or using the [sample solution](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/AVDBReplicatedServer.java) with [STUDENT_TESTING_MODE`=false`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-93)) by running GraderConsistency with [`TEST_FAULT_TOLERANCE`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-90) set to `false`. You should see the old consistency-only tests pass.
 
-Next, revert back `TEST_FAULT_TOLERANCE` (and `STUDENT_TESTING_MODE` if modified) to its default true value and verify that some tests in [`GraderFaultTolerance`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderFaultTolerance.java) fail.
+Next, revert  `TEST_FAULT_TOLERANCE` (and `STUDENT_TESTING_MODE` if modified) to its default `true`, and verify that some tests in [`GraderFaultTolerance`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderFaultTolerance.java) fail.
 
-From here on, you need to read the documentation of each test, understand why it's failing, and take it from there.
+From here on, you need to read the documentation of each test, understand why it's failing, and take it from there to make your replicated server consistent and fault-tolerant.
 
 ***
 
-# Submission Instructions #
+# Submission instructions #
 
 1. Submit a Bitbucket or Github repository forked from this repository to Gradescope keeping in mind the following:
 
-    1. Only files in the `faulttolerance` package should contain your source changes. Any changes to any other source or test files will be ignored. 
-	2. A design document (up to but not necessarily 3 pages long) 
-		* explaining your design; 
+    1. Only files in the `faulttolerance` package should contain your source changes. Any changes to any other source or test files will be ignored.
+	2. Include detailed documentation in your code files and follow good coding practices (helpful names, minimal privilege, thoughtfully handling exceptions beyond just printing a stack trace, defensive testing, effective use of loggers instead of print statements, etc.) 
+	3. A design document (up to but not necessarily 3 pages long) 
+		* explaining your design(s), wherein the plural is for if you choose to implement two separate options for extra credit; 
 		* explicitly noting how many tests passed in your testing; 
 		* conceptual explanation for failing tests, i.e., understand and explain why the test is failing (possibly including sample output) and what you think you need to implement to bug-fix or complete your design.
 	
 ***
 
-# Post-release Corrections #
-You are guinea pigs for this assignment in its current incarnation that is being test-driven for the first time, so some kinks will probably be discovered. Corrections or clarifications to this document or to the source code will be listed below.
+# Post-release corrections #
+You are guinea pigs for this newly revamped assignment that in its current incarnation is being test-driven for the first time, so some kinks will probably be discovered. Corrections or clarifications to this document or to the source code will be listed below.
 
-# Tips, Troubleshooting, FAQs #
-1. In addition to the detailed documentation, there are several handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing and debugging options.
-2. More based on your FAQs.
+# Tips, troubleshooting, FAQs #
+1. In addition to the inline source documentation, there are handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing/debugging options.
+2. You don't need any source code for either Zookeeper or Gigapaxos.
+3. You don't need any binaries other than the ones already included.
+4. You can do this assignment on Windows as well as it does not rely on any Gigapaxos on Zookeeper shell scripts, only Java.
+5. The RSM option is probably the fewest lines of code followed by Zookeeper followed by the Custom option, however this ordering may not necessarily correspond to the amount of time you might spend getting those options to work.
+6. Do NOT try to implement your own consensus protocol as part of the Custom option as it is an overkill especially since the assignment allows you to use a global assumed-fault-tolerant storage system (file system or database) for coordination anyway.
+7. As always, the tests or config files provided are not intended to be exhaustive, and we may test your code with more stressful tests or configurations.
+
+More based on your FAQs.
 
