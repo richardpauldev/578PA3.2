@@ -98,7 +98,7 @@ You are guinea pigs for this newly revamped assignment that in its current incar
 
 # Tips, troubleshooting, FAQs #
 1. In addition to the inline source documentation, there are handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing/debugging options.
-2. You don't need any source code for either Zookeeper or Gigapaxos.
+2. You don't need any source code for either Zookeeper or Gigapaxos, nevertheless you are strongly encouraged to download the sources into your IDE so that you can easily browse through the documentation of available methods as well as use debuggers more effectively.
 3. You don't need any binaries other than the ones already included.
 4. You can do this assignment on Windows as well as it does not rely on any Gigapaxos on Zookeeper shell scripts, only Java.
 5. The RSM option is probably the fewest lines of code followed by Zookeeper followed by the Custom option, however this ordering may not necessarily correspond to the amount of time you might spend getting those options to work.
