@@ -3,10 +3,8 @@ import edu.umass.cs.nio.nioutils.NodeConfigUtils;
 import edu.umass.cs.reconfiguration.ReconfigurableNode;
 import edu.umass.cs.utils.Util;
 import org.junit.Assert;
-import server.AVDBReplicatedServer;
 import server.MyDBReplicatedServer;
 import server.ReplicatedServer;
-import server.faulttolerance.AVDBFaultTolerantServerZK;
 import server.faulttolerance.MyDBFaultTolerantServerZK;
 
 import java.io.File;
@@ -76,10 +74,10 @@ public class ServerFailureRecoveryManager {
 
 				: GraderCommonSetup.TEST_FAULT_TOLERANCE ?
 				(!GraderFaultTolerance.GIGAPAXOS_MODE ?
-						(AVDBFaultTolerantServerZK.class.getName()) :
+						("server.AVDBFaultTolerantServerZK") :
 						ReconfigurableNode.class.getName()) :
 				// instructor replicated consistency implementation
-				AVDBReplicatedServer.class.getName());
+				"server.AVDBReplicatedServer");
 
 		if (!GraderCommonSetup.TEST_FAULT_TOLERANCE || !GraderFaultTolerance
 				.GIGAPAXOS_MODE)

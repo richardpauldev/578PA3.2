@@ -458,7 +458,7 @@ public class GraderCommonSetup {
 
 					// instructor mode
 					(SingleServer) getInstance(getConstructor
-							(AVDBReplicatedServer.class.getName(), NodeConfig
+							("server.AVDBReplicatedServer", NodeConfig
 									.class, String.class, InetSocketAddress
 									.class), nodeConfigServer, node,
 							DEFAULT_DB_ADDR);
