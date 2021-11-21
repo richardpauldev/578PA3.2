@@ -83,7 +83,9 @@ public class GraderCommonSetup {
 	 separate processes.
 	 */
 	protected static final String CONFIG_FILE = System.getProperty("config")
-			!= null ? System.getProperty("config") : "conf/servers.properties";
+			!= null ? System.getProperty("config") : (!GraderFaultTolerance
+			.GIGAPAXOS_MODE ? "conf/servers" + ".properties" : "conf/gigapaxos" +
+			".properties");
 
 	// Must be true when testing fault tolerance; false means just replicated
 	// consistency will be tested.
@@ -108,7 +110,7 @@ public class GraderCommonSetup {
 			.addContactPoint(DEFAULT_SADDR.getHostName()).build()).connect
 			(DEFAULT_KEYSPACE);
 
-	private static NodeConfig<String> nodeConfigServer;
+	protected static NodeConfig<String> nodeConfigServer;
 
 	protected static final int NUM_REQS = 100;
 
@@ -126,7 +128,7 @@ public class GraderCommonSetup {
 		nodeConfigServer = NodeConfigUtils.getNodeConfigFromFile(CONFIG_FILE,
 				ReplicatedServer.SERVER_PREFIX, ReplicatedServer
 						.SERVER_PORT_OFFSET);
-		ServerFailureRecoveryManager.setNodeConfigServer(nodeConfigServer);
+		//ServerFailureRecoveryManager.setNodeConfigServer(nodeConfigServer);
 
 		/* Setup client here. Will instantiate MyDBClient here because
 		STUDENT_MODE is true by default.
