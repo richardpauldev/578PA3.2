@@ -97,7 +97,7 @@ From here on, you need to read the documentation of each test, understand why it
 You are guinea pigs for this newly revamped assignment that in its current incarnation is being test-driven for the first time, so some kinks will probably be discovered. Corrections or clarifications to this document or to the source code will be listed below.
 
 1. Added sentence in Getting Started above: *"You should also see at least the first test in `GraderFaultTolerance` pass."*.
-2. Added sentence in Gettinng Started above: *"These tests fail because... everything runs in a single JVM."*
+2. Added sentence in Getting Started above: *"These tests fail because... everything runs in a single JVM."*
 
 # Tips, troubleshooting, FAQs #
 1. In addition to the inline source documentation, there are handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing/debugging options.
