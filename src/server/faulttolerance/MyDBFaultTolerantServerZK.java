@@ -105,7 +105,7 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		new AVDBReplicatedServer(NodeConfigUtils.getNodeConfigFromFile
+		new MyDBFaultTolerantServerZK(NodeConfigUtils.getNodeConfigFromFile
 				(args[0], ReplicatedServer.SERVER_PREFIX, ReplicatedServer
 						.SERVER_PORT_OFFSET), args[1], args.length > 2 ? Util
 				.getInetSocketAddressFromString(args[2]) : new
