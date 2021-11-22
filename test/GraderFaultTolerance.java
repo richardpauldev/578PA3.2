@@ -53,6 +53,7 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 			// sleep to allow servers to bootup
 			Thread.sleep(PER_SERVER_BOOTSTRAP_TIME * (servers.length));
 		}
+		Thread.sleep(SLEEP*servers.length);
 	}
 
 	private static Set<ReconfigurableNode> gpServers = new
