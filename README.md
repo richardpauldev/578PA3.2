@@ -78,6 +78,8 @@ Next, revert  `TEST_FAULT_TOLERANCE` (and `STUDENT_TESTING_MODE` if modified) to
 
 From here on, you need to read the documentation of each test, understand why it's failing, and take it from there to make your replicated server consistent and fault-tolerant.
 
+If using the GigaPaxos/RSM approach, change [`ReplicatedServer.PREFIX`](https://bitbucket.org/distrsys/fault-tolerant-db/src/aec05dee351ae433c08ccbbc0103d65c17c3aa82/src/server/ReplicatedServer.java#lines-21) from `"server"` to `"active"` because it would be using the `conf/gigapaxos.properties` configuration file (as opposed to `servers.properties` for the other two options).
+
 ***
 
 # Submission instructions #
@@ -98,6 +100,7 @@ You are guinea pigs for this newly revamped assignment that in its current incar
 
 1. Added sentence in Getting Started above: *"You should also see at least the first test in `GraderFaultTolerance` pass."*.
 2. Added sentence in Getting Started above: *"These tests fail because... everything runs in a single JVM."*
+3. Added sentence in Getting Started above "If using the GigaPaxos/RSM approach... configurationn file (..)."
 
 # Tips, troubleshooting, FAQs #
 1. In addition to the inline source documentation, there are handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing/debugging options.
