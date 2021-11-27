@@ -110,6 +110,7 @@ You are guinea pigs for this newly revamped assignment that in its current incar
 5. The RSM option is probably the fewest lines of code followed by Zookeeper followed by the Custom option, however this ordering may not necessarily correspond to the amount of time you might spend getting those options to work.
 6. Do NOT try to implement your own consensus protocol as part of the Custom option as it is an overkill especially since the assignment allows you to use a global assumed-fault-tolerant storage system (file system or database) for coordination anyway.
 7. As always, the tests or config files provided are not intended to be exhaustive, and we may test your code with more stressful tests or configurations.
+8. Always remember to clear all state before every test run (e.g., paxos_logs/ in the GigaPaxos/RSM option and any files/tables/znodes you may have created in the other two options), otherwise you may be potentially carrying over bugs from previous runs.
 
 More based on your FAQs.
 
