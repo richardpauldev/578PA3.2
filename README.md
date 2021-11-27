@@ -72,11 +72,13 @@ Your implementation must respect the following constraints, but these are not me
 
 # Getting started #
 
-Start by running your consistency-only replicated server (or using the [sample solution](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/AVDBReplicatedServer.java) with [STUDENT_TESTING_MODE`=false`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-93)) by running GraderConsistency with [`TEST_FAULT_TOLERANCE`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-90) set to `false`. You should see the old consistency-only tests pass.
+Start by running your consistency-only replicated server (or using the [sample solution](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/AVDBReplicatedServer.java) with [STUDENT_TESTING_MODE`=false`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-93)) by running GraderConsistency with [`TEST_FAULT_TOLERANCE`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-90) set to `false`. You should see the old consistency-only tests pass. You should also see at least the first test in `GraderFaultTolerance` pass.
 
-Next, revert  `TEST_FAULT_TOLERANCE` (and `STUDENT_TESTING_MODE` if modified) to its default `true`, and verify that some tests in [`GraderFaultTolerance`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderFaultTolerance.java) fail.
+Next, revert  `TEST_FAULT_TOLERANCE` (and `STUDENT_TESTING_MODE` if modified) to its default `true`, and verify that ~~some~~ tests in [`GraderFaultTolerance`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderFaultTolerance.java) fail. These tests fail because both `MyDBFaultTolerantServerZK` and `MyDBReplicableApp` throw "unimplemented" runtime exceptions, which you can see by disabling the default `PROCESS_MODE=true` flag so everything runs in a single JVM.
 
 From here on, you need to read the documentation of each test, understand why it's failing, and take it from there to make your replicated server consistent and fault-tolerant.
+
+If using the GigaPaxos/RSM approach, change [`ReplicatedServer.PREFIX`](https://bitbucket.org/distrsys/fault-tolerant-db/src/aec05dee351ae433c08ccbbc0103d65c17c3aa82/src/server/ReplicatedServer.java#lines-21) from `"server"` to `"active"` because it would be using the `conf/gigapaxos.properties` configuration file (as opposed to `servers.properties` for the other two options).
 
 ***
 
@@ -96,6 +98,10 @@ From here on, you need to read the documentation of each test, understand why it
 # Post-release corrections #
 You are guinea pigs for this newly revamped assignment that in its current incarnation is being test-driven for the first time, so some kinks will probably be discovered. Corrections or clarifications to this document or to the source code will be listed below.
 
+1. Added sentence in Getting Started above: *"You should also see at least the first test in `GraderFaultTolerance` pass."*.
+2. Added sentence in Getting Started above: *"These tests fail because... everything runs in a single JVM."*
+3. Added sentence in Getting Started above "If using the GigaPaxos/RSM approach... configurationn file (..)."
+
 # Tips, troubleshooting, FAQs #
 1. In addition to the inline source documentation, there are handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing/debugging options.
 2. You don't need any source code for either Zookeeper or Gigapaxos, nevertheless you are strongly encouraged to download the sources into your IDE so that you can easily browse through the documentation of available methods as well as use debuggers more effectively.
@@ -104,6 +110,7 @@ You are guinea pigs for this newly revamped assignment that in its current incar
 5. The RSM option is probably the fewest lines of code followed by Zookeeper followed by the Custom option, however this ordering may not necessarily correspond to the amount of time you might spend getting those options to work.
 6. Do NOT try to implement your own consensus protocol as part of the Custom option as it is an overkill especially since the assignment allows you to use a global assumed-fault-tolerant storage system (file system or database) for coordination anyway.
 7. As always, the tests or config files provided are not intended to be exhaustive, and we may test your code with more stressful tests or configurations.
+8. Always remember to clear all state before every test run (e.g., paxos_logs/ in the GigaPaxos/RSM option and any files/tables/znodes you may have created in the other two options), otherwise you may be potentially carrying over bugs from previous runs.
 
 More based on your FAQs.
 
