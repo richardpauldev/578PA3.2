@@ -4,6 +4,7 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import edu.umass.cs.gigapaxos.PaxosConfig;
 import edu.umass.cs.nio.interfaces.NodeConfig;
 import edu.umass.cs.nio.nioutils.NIOHeader;
 import edu.umass.cs.nio.nioutils.NodeConfigUtils;
@@ -66,7 +67,7 @@ public class GraderCommonSetup {
 	// True only for testing use by instructor. It can be used to start
 	// gigapaxos servers in a single JVM if set to true and PROCESS_MODE is
 	// set to false.
-	protected static boolean DEFER_SERVER_CREATION_TO_CHILD = false;
+	protected static boolean DEFER_SERVER_CREATION_TO_CHILD = true;
 
 	// If true, replicas will start with whatever DB table state they had
 	// just before they last crashed. Should be false while submitting.
@@ -126,8 +127,9 @@ public class GraderCommonSetup {
 						InetSocketAddress.class, String.class), DEFAULT_SADDR,
 						DEFAULT_DB_ADDR, DEFAULT_KEYSPACE);
 		nodeConfigServer = NodeConfigUtils.getNodeConfigFromFile(CONFIG_FILE,
-				ReplicatedServer.SERVER_PREFIX, ReplicatedServer
-						.SERVER_PORT_OFFSET);
+				(!GraderFaultTolerance.GIGAPAXOS_MODE ? ReplicatedServer
+						.SERVER_PREFIX : PaxosConfig.DEFAULT_SERVER_PREFIX),
+				ReplicatedServer.SERVER_PORT_OFFSET);
 		//ServerFailureRecoveryManager.setNodeConfigServer(nodeConfigServer);
 
 		/* Setup client here. Will instantiate MyDBClient here because
