@@ -42,6 +42,13 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 	 */
 	public static final int MAX_LOG_SIZE = 400;
 
+	/**
+	 * Set this string as need to specify the path for cassandra's cqlsh
+	 * command, i.e., you can invoke cqlsh as CASSANDRA_HOME_PATH/bin/cqlsh
+	 */
+	public static final String
+			CASSANDRA_HOME_PATH="/Users/arun/apache-cassandra-3.11.11";
+
 	@BeforeClass
 	public static void setupFT() throws IOException, InterruptedException {
 		if (GIGAPAXOS_MODE) {
