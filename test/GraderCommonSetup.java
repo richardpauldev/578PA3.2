@@ -67,7 +67,7 @@ public class GraderCommonSetup {
 	// True only for testing use by instructor. It can be used to start
 	// gigapaxos servers in a single JVM if set to true and PROCESS_MODE is
 	// set to false.
-	protected static boolean DEFER_SERVER_CREATION_TO_CHILD = true;
+	protected static boolean DEFER_SERVER_CREATION_TO_CHILD = false;
 
 	// If true, replicas will start with whatever DB table state they had
 	// just before they last crashed. Should be false while submitting.
@@ -482,7 +482,7 @@ public class GraderCommonSetup {
 			// creates instances of replicated servers in separate processes
 			// provided if it is not meant to be deferred to child
 			// implementations of this testing class.
-		else if (!DEFER_SERVER_CREATION_TO_CHILD)
+		else if (!(GraderFaultTolerance.GIGAPAXOS_MODE && DEFER_SERVER_CREATION_TO_CHILD))
 			ServerFailureRecoveryManager.startAllServers();
 	}
 
