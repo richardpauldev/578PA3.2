@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runners.MethodSorters;
+import server.faulttolerance.MyDBReplicableAppGP;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -90,7 +91,9 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 
 	private static String getCommand(String cmd) {
 		return !GIGAPAXOS_MODE ? cmd : new RequestPacket(cmd, false)
-				.putPaxosID(PaxosConfig.getDefaultServiceName(), 0).toString();
+				.putPaxosID((STUDENT_TESTING_MODE ? MyDBReplicableAppGP.class
+						.getSimpleName() : "AVDBReplicableAppGP") + "0", 0)
+				.toString();
 	}
 
 	private static InetSocketAddress getAddress(String server) {
