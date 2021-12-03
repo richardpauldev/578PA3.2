@@ -25,7 +25,7 @@ PROCESS_MODE may be easier for debugging (but with the caveat that step-through
 debuggers are poor for concurrency/distributedness because they change the very
 thing being observed in a Heisenbergian mannner).
 
-+ Zookeeper vs. Gigapaxos: The ZK_NOT_GP in GraderCommonSetup means Zookeeper mode,
++ Zookeeper vs. Gigapaxos: The GIGAPAXOS_MODE in GraderCommonSetup means Zookeeper mode,
 not Gigapaxos mode. You have to fix one or the other for an implementation
 because they two have different designs, the former being a coordination object
 storage service and the latter being an RSM.
