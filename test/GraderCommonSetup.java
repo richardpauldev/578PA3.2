@@ -129,15 +129,18 @@ public class GraderCommonSetup {
 		nodeConfigServer = NodeConfigUtils.getNodeConfigFromFile(CONFIG_FILE,
 				(!GraderFaultTolerance.GIGAPAXOS_MODE ? ReplicatedServer
 						.SERVER_PREFIX : PaxosConfig.DEFAULT_SERVER_PREFIX),
-				ReplicatedServer.SERVER_PORT_OFFSET);
+				(!GraderFaultTolerance.GIGAPAXOS_MODE ? ReplicatedServer
+						.SERVER_PORT_OFFSET: 0));
 		//ServerFailureRecoveryManager.setNodeConfigServer(nodeConfigServer);
 
 		/* Setup client here. Will instantiate MyDBClient here because
 		STUDENT_MODE is true by default.
 		 */
 		NodeConfig<String> nodeConfigClient = NodeConfigUtils
-				.getNodeConfigFromFile(CONFIG_FILE, ReplicatedServer
-						.SERVER_PREFIX);
+				.getNodeConfigFromFile(CONFIG_FILE, (!GraderFaultTolerance.GIGAPAXOS_MODE ? ReplicatedServer
+						.SERVER_PREFIX : PaxosConfig.DEFAULT_SERVER_PREFIX),
+						(!GraderFaultTolerance.GIGAPAXOS_MODE ? 0:
+								PaxosConfig.getClientPortOffset()));
 		client = STUDENT_TESTING_MODE ? new MyDBClient(nodeConfigClient)
 
 				// instructor client
