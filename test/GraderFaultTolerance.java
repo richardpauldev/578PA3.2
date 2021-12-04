@@ -437,14 +437,14 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 			InterruptedException {
 
 		// issue enough requests to stress test checkpointing
-		for (int i = 0; i < MAX_LOG_SIZE*2 + servers.length; i++) {
+		for (int i = 0; i < MAX_LOG_SIZE*5 + servers.length; i++) {
 			client.send(serverMap.get(servers[0]), getCommand
 					(updateRecordOfTableCmd(fixedKeyKnownToExist,
 							DEFAULT_TABLE_NAME)));
 			// small sleep to slow down because gigapaxos is optimized to
 			// batch request flurries and may effectively see fewer
 			// requests.
-			Thread.sleep(2);
+			Thread.sleep(10);
 		}
 		ServerFailureRecoveryManager.mercilesslySlaughterAll();
 		ServerFailureRecoveryManager.startAllServers();
