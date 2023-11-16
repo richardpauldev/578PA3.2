@@ -11,7 +11,7 @@ The goal of this assignment is to use consensus to build a fault-tolerant replic
 
 2. **Replicated state machine** (GigaPaxos): GigaPaxos to encapsulate the application as an RSM;
 
-3. **Custom protocol** (Custom): Your own coordination protocol possibly using a globally accessible logically centralized file system or database for coordination (an option analogous to #1 but not forcing you to use Zookeeper).
+3. **Custom protocol** (Custom): Your own coordination protocol possibly using a globally accessible logically centralized file system or database for coordination (an option analogous to #1 but not forcing you to use Zookeeper). If you use this approach and use cassandra itself like "zookeeper" as a coordination server, you must absolutely make sure that the coordination keyspace is completely isolated from the keyspace used by unit tests where safety critical state is maintained.
 
 ### Prerequisites ###
 
