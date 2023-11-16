@@ -15,7 +15,7 @@ The goal of this assignment is to use consensus to build a fault-tolerant replic
 
 ### Prerequisites ###
 
-1. Java is required; Linux strongly recommended but not necessary for any of the three options above;
+1. Java is required; unix is strongly recommended but not necessary for any of the three options above;
 
 2. Familiarity with the [replicated consistent (non-fault-tolerant) datastore programming assignment (PA2)](https://bitbucket.org/avenka/590cc/src/master/consistency/);
 
@@ -30,7 +30,7 @@ You are already familiar with the application environment and background here ha
 ### Your code files ###
 Your work will use exactly one (not both) of the two files in the `faulttolerance` package as a starting point for your implementation:
 
-1. [`MyDBReplicableApp`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/faulttolerance/MyDBReplicableAppGP.java) if using the GigaPaxos/RSM approach.
+1. [`MyDBReplicableAppGP`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/faulttolerance/MyDBReplicableAppGP.java) if using the GigaPaxos/RSM approach.
 
 2. [`MyDBFaultTolerantServerZK`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/faulttolerance/MyDBFaultTolerantServerZK.java) otherwise.
 
@@ -38,11 +38,11 @@ You may create as many additional code files as needed in the `faulttolerance` p
 ***
 
 ### Test code files ###
-The test code (what used to be [`Grader`](https://bitbucket.org/avenka/590cc/src/master/consistency/test/Grader.java) for consistency-only tests) has evolved a fair bit for fault tolerance as follows:
+The test code (what used to be [`Grader`] for consistency-only tests) has evolved a fair bit for fault tolerance as follows:
 
-1. [`GraderCommonSetup`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderCommonSetup.java): The setup and teardown portions before and after tests common to both consistency and fault tolerance tests.
+1. [`GraderCommonSetup`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderCommonSetup.java): Common setup code for both consistency and fault tolerance tests.
 
-2. [`GraderConsistency`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderConsistency.java): Tests identical to the old [`Grader`](https://bitbucket.org/avenka/590cc/src/master/consistency/test/Grader.java).
+2. [`GraderConsistency`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderConsistency.java): Tests same as the old consistency tests in [`Grader`] (https://bitbucket.org/distrsys/consistent-db/src/master/test/Grader.java).
 
 3. [`GraderFaultTolerance`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderFaultTolerance.java): Setup and tests for testing fault tolerance, the primary testing focus of this assignment, inherited from `GraderCommonSetup`. The documentation of the tests in this class should be self-explanatory.
 
@@ -72,11 +72,11 @@ Your implementation must respect the following constraints, but these are not me
 
 # Getting started #
 
-Start by running your consistency-only replicated server (or using the [sample solution](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/AVDBReplicatedServer.java) with [STUDENT_TESTING_MODE`=false`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-93)) by running GraderConsistency with [`TEST_FAULT_TOLERANCE`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-90) set to `false`. You should see the old consistency-only tests pass. You should also see at least the first test in `GraderFaultTolerance` pass.
+Start by running your consistency-only replicated server (or using the [sample solution](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/AVDBReplicatedServer.java) with [STUDENT_TESTING_MODE`=false`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-93)) by running GraderConsistency. You should see the old consistency-only tests pass. You should also see at least the first test in `GraderFaultTolerance` pass.
 
-Next, revert  `TEST_FAULT_TOLERANCE` (and `STUDENT_TESTING_MODE` if modified) to its default `true`, and verify that tests in [`GraderFaultTolerance`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderFaultTolerance.java) fail. These tests fail because both `MyDBFaultTolerantServerZK` and `MyDBReplicableApp` throw "unimplemented" runtime exceptions, which you can see by disabling the default `PROCESS_MODE=true` flag so everything runs in a single JVM.
+Next, revert `STUDENT_TESTING_MODE` to its default `true`, and verify that tests in [`GraderFaultTolerance`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderFaultTolerance.java) fail. These tests fail because both `MyDBFaultTolerantServerZK` and `MyDBReplicableApp` throw "unimplemented" runtime exceptions, which you can see by disabling the default `PROCESS_MODE=true` flag so everything runs in a single JVM.
 
-From here on, you need to read the documentation of each test, understand why it's failing, and take it from there to make your replicated server consistent and fault-tolerant.
+From here on, you need to read the documentation of each test, understand why it's failing, and take it from there to make your replicated server consistent and fault-tolerant. The documentation and test method names should be self-explanatory.
 
 ***
 
@@ -93,11 +93,6 @@ From here on, you need to read the documentation of each test, understand why it
 	
 ***
 
-# Post-release corrections #
-You are guinea pigs for this newly revamped assignment that in its current incarnation is being test-driven for the first time, so some kinks will probably be discovered. Corrections or clarifications to this document or to the source code will be listed below.
-
-1. Added sentence in Getting Started above: *"You should also see at least the first test in `GraderFaultTolerance` pass."*.
-2. Added sentence in Getting Started above: *"These tests fail because... everything runs in a single JVM."*
 
 # Tips, troubleshooting, FAQs #
 1. In addition to the inline source documentation, there are handy tips in [`test/README.txt`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/README.txt) for playing with various testing/debugging options.
@@ -108,6 +103,7 @@ You are guinea pigs for this newly revamped assignment that in its current incar
 6. Do NOT try to implement your own consensus protocol as part of the Custom option as it is an overkill especially since the assignment allows you to use a global assumed-fault-tolerant storage system (file system or database) for coordination anyway.
 7. As always, the tests or config files provided are not intended to be exhaustive, and we may test your code with more stressful tests or configurations.
 8. Always remember to clear all state before every test run (e.g., paxos_logs/ in the GigaPaxos/RSM option and any files/tables/znodes you may have created in the other two options), otherwise you may be potentially carrying over bugs from previous runs.
+9. Always remember that a crash fault-tolerant consistent system must not make any changes to state without going through some kind of a consensus protocol, otherwise you will invariably end up violating safety.
 
 More based on your FAQs.
 
