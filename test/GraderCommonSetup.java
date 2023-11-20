@@ -9,6 +9,7 @@ import edu.umass.cs.nio.interfaces.NodeConfig;
 import edu.umass.cs.nio.nioutils.NIOHeader;
 import edu.umass.cs.nio.nioutils.NodeConfigUtils;
 import edu.umass.cs.utils.RepeatRule;
+import org.json.JSONArray;
 import org.junit.*;
 import org.junit.rules.TestName;
 import org.junit.rules.TestWatcher;
@@ -17,13 +18,11 @@ import server.*;
 import server.faulttolerance.MyDBFaultTolerantServerZK;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -48,8 +47,7 @@ private static final InetSocketAddress DEFAULT_DB_ADDR =
 // all of the safety-critical state to be managed consistently.
 protected final static String DEFAULT_TABLE_NAME = "grade";
 protected static Cluster cluster;
-protected static Session session = (cluster =
-		Cluster.builder().addContactPoint(DEFAULT_SADDR.getHostName()).build()).connect(DEFAULT_KEYSPACE);
+protected static Session session = null;
 ////////////end of DB params
 
 ////////////// client/server config variables
@@ -73,9 +71,11 @@ protected static final int NUM_REQS = 100;
 //////////////////// sleep macros
 protected static final int MAX_SLEEP = 1000;
 protected static final int SLEEP_RATIO = 10;
+// ZK or other implementations can set higher sleep if needed, but it
+// shouldn't be needed.
 protected static int SLEEP = Math.max(MAX_SLEEP,
 		MyDBFaultTolerantServerZK.SLEEP);
-public static final int PER_SERVER_BOOTSTRAP_TIME = MAX_SLEEP * 4;
+public static final int PER_SERVER_BOOTSTRAP_TIME = MAX_SLEEP * 5;
 /////////////////////// end of SLEEP params
 
 /* True means servers will be started as separate OS-level processes
@@ -93,12 +93,15 @@ protected static final boolean REDIRECT_IO_TO_FILE = false;
 
 /* Must be true when used by students.
  */
-protected static final boolean STUDENT_TESTING_MODE = true;
+protected static final boolean STUDENT_TESTING_MODE = false;//true;
 
 
 //@BeforeClass
 public static void setup(boolean gpMode) throws IOException,
 		InterruptedException {
+
+	session = (cluster =
+			Cluster.builder().addContactPoint(DEFAULT_SADDR.getHostName()).build()).connect(DEFAULT_KEYSPACE);
 
 	CONFIG_FILE = System.getProperty("config") != null ? System.getProperty(
 			"config") : (!gpMode ? "conf/servers.properties" : "conf/gigapaxos"
@@ -222,6 +225,13 @@ protected void verifyOrderConsistent(String table, int key) {
 protected void verifyOrderConsistent(String table, Integer key,
 									 Set<String> exclude,
 									 boolean possiblyEmpty) {
+	verifyOrderConsistent(table, key, exclude, possiblyEmpty, true);
+									 }
+
+protected void verifyOrderConsistent(String table, Integer key,
+									 Set<String> exclude,
+									 boolean possiblyEmpty,
+									 boolean prefixOkay) {
 	String[] results = new String[servers.length - exclude.size()];
 	String[] comparedServers = new String[servers.length - exclude.size()];
 
@@ -231,37 +241,87 @@ protected void verifyOrderConsistent(String table, Integer key,
 
 	int i = 0;
 	boolean nonEmpty = false;
+	ResultSet[] resultSets = new ResultSet[comparedServers.length];
+	Map<Integer,ArrayList<Integer>>[] tables = new Map[comparedServers.length];
+
 	for (String node : comparedServers) {
-		ResultSet result = session.execute(key != null ?
+		resultSets[i] = session.execute(key != null ?
 				readResultFromTableCmd(key, table, node) :
 				readResultFromTableCmd(table, node));
 
-		results[i] = "";
-		for (Row row : result) {
-			results[i] += row;
+		tables[i] = new HashMap<Integer, ArrayList<Integer>>();
+		for(Row row : resultSets[i]) {
 			nonEmpty = true;
+			// single key row mode with each row an events list
+			if(key!=null) {
+				tables[i].putIfAbsent(key, new ArrayList<Integer>());
+				tables[i].put(key, new ArrayList<Integer>(row.getList("events",
+						Integer.class)));
+			}
+			// entire table mode with each row a key:events_list pair
+			else {
+				int curKey = row.getInt(0);
+				tables[i].put(curKey,new ArrayList<Integer>(row.getList(1,
+						Integer.class)));
+			}
 		}
 		i++;
+	}
+
+	Map<Integer,ArrayList<Integer>> longest = tables[0];
+	int longestIndex = 0; boolean done = false;
+	for (i=0; i<tables.length;i++) {
+		if (tables[i].size() > longest.size()) {
+			longest = tables[i];
+			longestIndex = i;
+		}
 	}
 
 	boolean match = true;
 	String message = "";
-	for (i = 0; i < results.length; i++) {
-		if (!results[0].equals(results[i])) {
+	for (i = 0; i < tables.length; i++) {
+		if(longest == tables[i]) continue;
+		// exact match or prefix check
+		if ((!prefixOkay && !longest.equals(tables[i]))
+				||
+				// prefix check
+				(prefixOkay && !isPrefix(longest,tables[i]))
+		) {
 			match = false;
-			message += "\n" + comparedServers[0] + ":" + results[0] + "\n " +
-					"!=\n" + comparedServers[i] + ":" + results[i] + "\n";
+			message += "\n" + comparedServers[longestIndex] + ":" + tables[longestIndex] + "\n " +
+					"!="+(prefixOkay ? "(prefix)":"(exact)")+"\n" + comparedServers[i] +
+					":" + tables[i] + "\n";
 		}
-		i++;
 	}
+
+
 	message += (!(possiblyEmpty || nonEmpty) ? "nonEmpty=" + nonEmpty : "");
 	if (!exclude.isEmpty()) System.out.println("Excluded servers=" + exclude);
 	System.out.println("\n");
 	for (i = 0; i < results.length; i++)
-		System.out.println(comparedServers[i] + ":" + results[i]);
-	Assert.assertTrue(message, (possiblyEmpty || nonEmpty) && match);
+		//System.out.println(comparedServers[i] + ":" + results[i]);
+		System.out.println(comparedServers[i] + ":" + tables[i]);
+		Assert.assertTrue(message, (possiblyEmpty || nonEmpty) && match);
 }
 
+private boolean isPrefix(Map<Integer,ArrayList<Integer>> longerMap, Map<Integer,
+		ArrayList<Integer>> map) {
+	boolean unequal = longerMap.size()!=map.size();
+	int nonExactMatches = 0;
+	boolean prefixMismatch = false;
+	for(Integer key : map.keySet()) {
+		if(!map.get(key).equals(longerMap.get(key))) nonExactMatches++;
+		if(!isPrefix(map.get(key),longerMap.get(key))) prefixMismatch = true;
+	}
+	return (nonExactMatches<=1) && !prefixMismatch;
+}
+
+
+private boolean isPrefix(ArrayList<Integer> a1, ArrayList<Integer> a2) {
+	for (int i = 0; i < Math.min(a1.size(), a2.size()); i++)
+		if (!a1.get(i).equals(a2.get(i))) return false;
+	return true;
+}
 
 private void testCreateTableSleep(boolean single) throws InterruptedException
 		, IOException {
@@ -388,7 +448,7 @@ protected static String updateRecordOfTableCmd(int key, String table) {
 
 // reads the entire table, all keys
 protected static String readResultFromTableCmd(String table, String keyspace) {
-	return "select events from " + keyspace + "." + table + ";";
+	return "select * from " + keyspace + "." + table + ";";
 }
 
 // This is only used to fetch the result from the table by session

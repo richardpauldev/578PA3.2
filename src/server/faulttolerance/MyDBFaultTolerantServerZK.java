@@ -39,11 +39,10 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 	public static final int SLEEP = 1000;
 
 	/**
-	 * Set this string as need to specify the path for cassandra's cqlsh
-	 * command, i.e., you can invoke cqlsh as CASSANDRA_HOME_PATH/bin/cqlsh
+	 * Set this to true if you want all tables drpped at the end of each run
+	 * of tests by GraderFaultTolerance.
 	 */
-	public static final String
-			CASSANDRA_HOME_PATH="/Users/arun/apache-cassandra-3.11.11";
+	public static final boolean DROP_TABLES_AFTER_TESTS=true;
 
 	/**
 	 * Maximum permitted size of any collection that is used to maintain

@@ -1,4 +1,5 @@
 import com.datastax.driver.core.ResultSet;
+import com.gradescope.jh61b.grader.GradedTest;
 import edu.umass.cs.gigapaxos.PaxosConfig;
 import edu.umass.cs.gigapaxos.paxospackets.RequestPacket;
 import edu.umass.cs.nio.interfaces.NodeConfig;
@@ -15,8 +16,10 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runners.MethodSorters;
 import server.ReplicatedServer;
+import server.faulttolerance.MyDBFaultTolerantServerZK;
 import server.faulttolerance.MyDBReplicableAppGP;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -37,7 +40,7 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 /**
  * True if Gigapaxos being used, false if Zookeeper or anything else.
  */
-public static final boolean GIGAPAXOS_MODE = false;
+public static final boolean GIGAPAXOS_MODE = true;//false;
 
 /**
  * Maximum permitted size of any collection that is used to maintain
@@ -57,6 +60,14 @@ protected static boolean DISABLE_RECOVERING_WITH_EMPTY_STATE = false;
 
 @BeforeClass
 public static void setupFT() throws IOException, InterruptedException {
+		/*
+	Best to remove paxos_logs with each test to avoid errors from carrying
+	over. Put here defensively in case students forget to do so manually.
+	 */
+	if(GIGAPAXOS_MODE) Util.recursiveRemove(new File("paxos_logs"));
+	// kill all started processes before shutdown
+	addShutdownHook();
+
 	GraderCommonSetup.setup(GIGAPAXOS_MODE);
 	if (!GraderFaultTolerance.DISABLE_RECOVERING_WITH_EMPTY_STATE)
 		createEmptyTables();
@@ -137,6 +148,7 @@ private static InetSocketAddress getAddress(String server) {
  * needed.
  */
 @Test
+@GradedTest(name = "test31_GracefulExecutionSingleRequest()", max_score = 5)
 public void test31_GracefulExecutionSingleRequest() throws IOException,
 		InterruptedException {
 
@@ -162,6 +174,7 @@ public void test31_GracefulExecutionSingleRequest() throws IOException,
  * @throws InterruptedException
  */
 @Test
+@GradedTest(name = "test32_GracefulExecutionMultipleRequestsSingleServer()", max_score = 5)
 public void test32_GracefulExecutionMultipleRequestsSingleServer() throws IOException, InterruptedException {
 
 	int key = ThreadLocalRandom.current().nextInt();
@@ -183,6 +196,7 @@ public void test32_GracefulExecutionMultipleRequestsSingleServer() throws IOExce
 }
 
 @Test
+@GradedTest(name = "test33_GracefulExecutionMultipleRequestsToMultipleServers()", max_score = 5)
 public void test33_GracefulExecutionMultipleRequestsToMultipleServers() throws IOException, InterruptedException {
 
 	int key = ThreadLocalRandom.current().nextInt();
@@ -211,6 +225,7 @@ private static Set<String> crashed = new HashSet<String>();
  * across alive servers.
  */
 @Test
+@GradedTest(name = "test34_SingleServerCrash()", max_score = 5)
 public void test34_SingleServerCrash() throws IOException,
 		InterruptedException {
 
@@ -256,6 +271,7 @@ public void test34_SingleServerCrash() throws IOException,
  * execution across alive servers.
  */
 @Test
+@GradedTest(name = "test35_TwoServerCrash()", max_score = 5)
 public void test35_TwoServerCrash() throws IOException, InterruptedException {
 
 	int key = ThreadLocalRandom.current().nextInt();
@@ -296,6 +312,7 @@ public void test35_TwoServerCrash() throws IOException, InterruptedException {
  * @throws InterruptedException
  */
 @Test
+@GradedTest(name = "test36_OneServerRecoveryMultipleRequests()", max_score = 5)
 public void test36_OneServerRecoveryMultipleRequests() throws IOException,
 		InterruptedException {
 	String first = crashed.iterator().next();
@@ -305,9 +322,13 @@ public void test36_OneServerRecoveryMultipleRequests() throws IOException,
 
 	int key = ThreadLocalRandom.current().nextInt();
 
+	String server;
 	// No need to wait or sleep here as a recovering server shouldn't be
 	// a reason for a request to be lost.
-	client.send(serverMap.get((String) Util.getRandomOtherThan(serverMap.keySet(), crashed)), getCommand(insertRecordIntoTableCmd(key, DEFAULT_TABLE_NAME)));
+	client.send(serverMap.get(server=
+			(String) Util.getRandomOtherThan(serverMap.keySet(), crashed)), getCommand(insertRecordIntoTableCmd(key, DEFAULT_TABLE_NAME)));
+	Assert.assertTrue("key " + key + "not inserted at entry server " + server,
+			verifyInserted(key, server));
 	Thread.sleep(SLEEP);
 
 	String cmd = null;
@@ -331,6 +352,7 @@ private static Integer fixedKeyKnownToExist = null;
  * @throws InterruptedException
  */
 @Test
+@GradedTest(name = "test37_TwoServerRecoveryMultipleRequests()", max_score = 5)
 public void test37_TwoServerRecoveryMultipleRequests() throws IOException,
 		InterruptedException {
 	String first = crashed.iterator().next();
@@ -366,6 +388,7 @@ public void test37_TwoServerRecoveryMultipleRequests() throws IOException,
  * @throws InterruptedException
  */
 @Test
+@GradedTest(name = "test38_EntireStateMatchCheck()", max_score = 5)
 public void test38_EntireStateMatchCheck() throws IOException,
 		InterruptedException {
 	verifyTableConsistent(DEFAULT_TABLE_NAME);
@@ -381,6 +404,7 @@ public void test38_EntireStateMatchCheck() throws IOException,
  */
 
 @Test
+@GradedTest(name = "test39_InstantaneousMassacreAndRevivalTest()", max_score = 5)
 public void test39_InstantaneousMassacreAndRevivalTest() throws IOException,
 		InterruptedException {
 	ServerFailureRecoveryManager.killAllServers();
@@ -406,6 +430,7 @@ public void test39_InstantaneousMassacreAndRevivalTest() throws IOException,
  * @throws InterruptedException
  */
 @Test
+@GradedTest(name = "test40_SerialKillAndRecover()", max_score = 5)
 public void test40_SerialKillAndRecover() throws IOException,
 		InterruptedException {
 	long interKillIntervalMillis = 500, interRecoverMillis = 800;
@@ -416,7 +441,7 @@ public void test40_SerialKillAndRecover() throws IOException,
 	// no bootstrap time needed here
 
 	// Spray requests while slaughter and rebirth is happening
-	for (int i = 0; i < servers.length; i++) {
+	for (int i = 0; i < servers.length*servers.length; i++) {
 		client.send(serverMap.get(getRandomServerAddr()),
 				getCommand(updateRecordOfTableCmd(fixedKeyKnownToExist,
 						DEFAULT_TABLE_NAME)));
@@ -437,6 +462,7 @@ public void test40_SerialKillAndRecover() throws IOException,
  * @throws InterruptedException
  */
 @Test
+@GradedTest(name = "test41_CheckpointRecoveryTest()", max_score = 10)
 public void test41_CheckpointRecoveryTest() throws IOException,
 		InterruptedException {
 
@@ -477,6 +503,7 @@ public void test41_CheckpointRecoveryTest() throws IOException,
 @Test
 public void test49_DropTables() throws InterruptedException {
 	Thread.sleep(MAX_SLEEP);
+	if(GIGAPAXOS_MODE|| MyDBFaultTolerantServerZK.DROP_TABLES_AFTER_TESTS)
 	for (String node : servers) {
 		// clean up
 		session.execute(getDropTableCmd(DEFAULT_TABLE_NAME, node));
@@ -531,7 +558,6 @@ static {
 }
 
 public static void main(String[] args) throws IOException {
-	addShutdownHook();
-	Result result = JUnitCore.runClasses(GraderFaultTolerance.class);
+	JUnitCore.runClasses(GraderFaultTolerance.class);
 }
 }
