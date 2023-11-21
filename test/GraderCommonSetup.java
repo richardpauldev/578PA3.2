@@ -93,7 +93,7 @@ protected static final boolean REDIRECT_IO_TO_FILE = false;
 
 /* Must be true when used by students.
  */
-protected static final boolean STUDENT_TESTING_MODE = false;//true;
+protected static final boolean STUDENT_TESTING_MODE = true;
 
 
 //@BeforeClass
