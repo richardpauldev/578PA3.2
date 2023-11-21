@@ -87,7 +87,7 @@ public static void setupFT() throws IOException, InterruptedException {
 	}
 	else ServerFailureRecoveryManager.startAllServers(true);
 
-	System.out.println("\nWaiting (" + (PER_SERVER_BOOTSTRAP_TIME * (servers.length)) / 1000 + " seconds) for gigapaxos servers to start");
+	System.out.println("\nWaiting (" + (PER_SERVER_BOOTSTRAP_TIME * (servers.length)) / 1000 + " seconds) for " + (GIGAPAXOS_MODE? "gigapaxos":"ZK-or-other-approach") + " servers to start");
 	// sleep to allow servers to bootup
 	Thread.sleep(PER_SERVER_BOOTSTRAP_TIME * (servers.length));
 }
