@@ -149,7 +149,7 @@ private static InetSocketAddress getAddress(String server) {
  * needed.
  */
 @Test
-@GradedTest(name = "test31_GracefulExecutionSingleRequest()", max_score = 5)
+@GradedTest(name = "test31_GracefulExecutionSingleRequest()", max_score = 3)
 public void test31_GracefulExecutionSingleRequest() throws IOException,
 		InterruptedException {
 
@@ -175,7 +175,8 @@ public void test31_GracefulExecutionSingleRequest() throws IOException,
  * @throws InterruptedException
  */
 @Test
-@GradedTest(name = "test32_GracefulExecutionMultipleRequestsSingleServer()", max_score = 5)
+@GradedTest(name = "test32_GracefulExecutionMultipleRequestsSingleServer()",
+		max_score = 3)
 public void test32_GracefulExecutionMultipleRequestsSingleServer() throws IOException, InterruptedException {
 
 	int key = ThreadLocalRandom.current().nextInt();
@@ -197,7 +198,8 @@ public void test32_GracefulExecutionMultipleRequestsSingleServer() throws IOExce
 }
 
 @Test
-@GradedTest(name = "test33_GracefulExecutionMultipleRequestsToMultipleServers()", max_score = 5)
+@GradedTest(name = "test33_GracefulExecutionMultipleRequestsToMultipleServers" +
+		"()", max_score = 3)
 public void test33_GracefulExecutionMultipleRequestsToMultipleServers() throws IOException, InterruptedException {
 
 	int key = ThreadLocalRandom.current().nextInt();
@@ -226,7 +228,7 @@ private static Set<String> crashed = new HashSet<String>();
  * across alive servers.
  */
 @Test
-@GradedTest(name = "test34_SingleServerCrash()", max_score = 5)
+@GradedTest(name = "test34_SingleServerCrash()", max_score = 3)
 public void test34_SingleServerCrash() throws IOException,
 		InterruptedException {
 
@@ -272,7 +274,7 @@ public void test34_SingleServerCrash() throws IOException,
  * execution across alive servers.
  */
 @Test
-@GradedTest(name = "test35_TwoServerCrash()", max_score = 5)
+@GradedTest(name = "test35_TwoServerCrash()", max_score = 3)
 public void test35_TwoServerCrash() throws IOException, InterruptedException {
 
 	int key = ThreadLocalRandom.current().nextInt();
@@ -313,7 +315,7 @@ public void test35_TwoServerCrash() throws IOException, InterruptedException {
  * @throws InterruptedException
  */
 @Test
-@GradedTest(name = "test36_OneServerRecoveryMultipleRequests()", max_score = 5)
+@GradedTest(name = "test36_OneServerRecoveryMultipleRequests()", max_score = 3)
 public void test36_OneServerRecoveryMultipleRequests() throws IOException,
 		InterruptedException {
 	String first = crashed.iterator().next();
@@ -353,7 +355,7 @@ private static Integer fixedKeyKnownToExist = null;
  * @throws InterruptedException
  */
 @Test
-@GradedTest(name = "test37_TwoServerRecoveryMultipleRequests()", max_score = 5)
+@GradedTest(name = "test37_TwoServerRecoveryMultipleRequests()", max_score = 3)
 public void test37_TwoServerRecoveryMultipleRequests() throws IOException,
 		InterruptedException {
 	String first = crashed.iterator().next();
@@ -389,7 +391,7 @@ public void test37_TwoServerRecoveryMultipleRequests() throws IOException,
  * @throws InterruptedException
  */
 @Test
-@GradedTest(name = "test38_EntireStateMatchCheck()", max_score = 5)
+@GradedTest(name = "test38_EntireStateMatchCheck()", max_score = 3)
 public void test38_EntireStateMatchCheck() throws IOException,
 		InterruptedException {
 	verifyTableConsistent(DEFAULT_TABLE_NAME);
@@ -405,7 +407,8 @@ public void test38_EntireStateMatchCheck() throws IOException,
  */
 
 @Test
-@GradedTest(name = "test39_InstantaneousMassacreAndRevivalTest()", max_score = 5)
+@GradedTest(name = "test39_InstantaneousMassacreAndRevivalTest()", max_score
+		= 3)
 public void test39_InstantaneousMassacreAndRevivalTest() throws IOException,
 		InterruptedException {
 	ServerFailureRecoveryManager.killAllServers();
@@ -431,7 +434,7 @@ public void test39_InstantaneousMassacreAndRevivalTest() throws IOException,
  * @throws InterruptedException
  */
 @Test
-@GradedTest(name = "test40_SerialKillAndRecover()", max_score = 5)
+@GradedTest(name = "test40_SerialKillAndRecover()", max_score = 3)
 public void test40_SerialKillAndRecover() throws IOException,
 		InterruptedException {
 	long interKillIntervalMillis = 500, interRecoverMillis = 800;
@@ -463,7 +466,7 @@ public void test40_SerialKillAndRecover() throws IOException,
  * @throws InterruptedException
  */
 @Test
-@GradedTest(name = "test41_CheckpointRecoveryTest()", max_score = 10)
+@GradedTest(name = "test41_CheckpointRecoveryTest()", max_score = 30)
 public void test41_CheckpointRecoveryTest() throws IOException,
 		InterruptedException {
 
