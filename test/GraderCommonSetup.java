@@ -458,6 +458,22 @@ protected static String readResultFromTableCmd(int key, String table,
 	return "select events from " + keyspace + "." + table + " where id=" + key + ";";
 }
 
+// compute minimum number of committed events
+protected int getMinNumCommittedEventsForFixedKey(Integer fixedKeyKnownToExist) {
+	int numEvents = Integer.MAX_VALUE;
+	for (String node : servers) {
+		ResultSet resultSet =
+				session.execute(readResultFromTableCmd(fixedKeyKnownToExist,
+						DEFAULT_TABLE_NAME, node));
+		for (Row row : resultSet) {
+			ArrayList<Integer> list = new ArrayList<Integer>(row.getList(
+					"events", Integer.class));
+			if (list.size() < numEvents) numEvents = list.size();
+		}
+	}
+	return numEvents;
+}
+
 private static long sequencer = 0;
 
 synchronized static long incrSeq() {

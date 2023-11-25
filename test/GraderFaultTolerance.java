@@ -22,6 +22,7 @@ import server.faulttolerance.MyDBReplicableAppGP;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,7 +41,7 @@ public class GraderFaultTolerance extends GraderCommonSetup {
 /**
  * True if Gigapaxos being used, false if Zookeeper or anything else.
  */
-public static final boolean GIGAPAXOS_MODE = false;
+public static final boolean GIGAPAXOS_MODE = true;//false;
 
 /**
  * Maximum permitted size of any collection that is used to maintain
@@ -476,6 +477,9 @@ public void test41_CheckpointRecoveryTest() throws IOException,
 		// requests.
 		Thread.sleep(10);
 	}
+	int numCommittedEventsForFixedKeyBefore =
+			getMinNumCommittedEventsForFixedKey(fixedKeyKnownToExist);
+
 	ServerFailureRecoveryManager.mercilesslySlaughterAll();
 	ServerFailureRecoveryManager.startAllServers();
 	Thread.sleep(PER_SERVER_BOOTSTRAP_TIME * servers.length);
@@ -484,6 +488,13 @@ public void test41_CheckpointRecoveryTest() throws IOException,
 	verifyOrderConsistent(DEFAULT_TABLE_NAME, fixedKeyKnownToExist);
 	// entire state
 	test38_EntireStateMatchCheck();
+	int numCommittedEventsForFixedKeyAfter =
+			getMinNumCommittedEventsForFixedKey(fixedKeyKnownToExist);
+	Assert.assertTrue("Number of committed requests post-crash is lower " +
+			"compared to pre-crash, probably because checkpoint and restore" +
+					" " +
+			"has not been implemented correctly",
+			numCommittedEventsForFixedKeyAfter >= numCommittedEventsForFixedKeyBefore);
 }
 
 
