@@ -72,7 +72,7 @@ Your implementation must respect the following constraints, but these are not me
 
 # Getting started #
 
-Start by running your consistency-only replicated server (or using the [sample solution](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/AVDBReplicatedServer.java) with [STUDENT_TESTING_MODE`=false`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-93)) by running GraderConsistency. You should see the old consistency-only tests pass. You should also see at least the first test in `GraderFaultTolerance` pass.
+Start by running your consistency-only replicated server (or using the [sample solution](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/src/server/AVDBReplicatedServer.java) with [STUDENT_TESTING_MODE`=false`](https://bitbucket.org/distrsys/fault-tolerant-db/src/9a12b86469508854d641de52f19170ec6db712b5/test/GraderCommonSetup.java#lines-93)) by running GraderConsistency. You should see the old consistency-only tests pass. ~~You should also see at least the first test in `GraderFaultTolerance` pass~~.
 
 Next, revert `STUDENT_TESTING_MODE` to its default `true`, and verify that tests in [`GraderFaultTolerance`](https://bitbucket.org/distrsys/fault-tolerant-db/src/master/test/GraderFaultTolerance.java) fail. These tests fail because both `MyDBFaultTolerantServerZK` and `MyDBReplicableApp` throw "unimplemented" runtime exceptions, which you can see by disabling the default `PROCESS_MODE=true` flag so everything runs in a single JVM.
 
