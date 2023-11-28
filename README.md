@@ -104,6 +104,7 @@ From here on, you need to read the documentation of each test, understand why it
 7. As always, the tests or config files provided are not intended to be exhaustive, and we may test your code with more stressful tests or configurations.
 8. Always remember to clear all state before every test run (e.g., paxos_logs/ in the GigaPaxos/RSM option and any files/tables/znodes you may have created in the other two options), otherwise you may be potentially carrying over bugs from previous runs.
 9. Always remember that a crash fault-tolerant consistent system must not make any changes to state without going through some kind of a consensus protocol, otherwise you will invariably end up violating safety.
+10. It is okay to assume that all application state will be contained in just the one table to which `Grader*` writes.
 
 More based on your FAQs.
 
