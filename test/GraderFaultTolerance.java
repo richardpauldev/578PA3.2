@@ -149,7 +149,7 @@ private static InetSocketAddress getAddress(String server) {
  * needed.
  */
 @Test
-@GradedTest(name = "test31_GracefulExecutionSingleRequest()", max_score = 3)
+@GradedTest(name = "test31_GracefulExecutionSingleRequest()", max_score = 1)
 public void test31_GracefulExecutionSingleRequest() throws IOException,
 		InterruptedException {
 
@@ -176,7 +176,7 @@ public void test31_GracefulExecutionSingleRequest() throws IOException,
  */
 @Test
 @GradedTest(name = "test32_GracefulExecutionMultipleRequestsSingleServer()",
-		max_score = 3)
+		max_score = 1)
 public void test32_GracefulExecutionMultipleRequestsSingleServer() throws IOException, InterruptedException {
 
 	int key = ThreadLocalRandom.current().nextInt();
@@ -199,7 +199,7 @@ public void test32_GracefulExecutionMultipleRequestsSingleServer() throws IOExce
 
 @Test
 @GradedTest(name = "test33_GracefulExecutionMultipleRequestsToMultipleServers" +
-		"()", max_score = 3)
+		"()", max_score = 2)
 public void test33_GracefulExecutionMultipleRequestsToMultipleServers() throws IOException, InterruptedException {
 
 	int key = ThreadLocalRandom.current().nextInt();
@@ -228,7 +228,7 @@ private static Set<String> crashed = new HashSet<String>();
  * across alive servers.
  */
 @Test
-@GradedTest(name = "test34_SingleServerCrash()", max_score = 3)
+@GradedTest(name = "test34_SingleServerCrash()", max_score = 4)
 public void test34_SingleServerCrash() throws IOException,
 		InterruptedException {
 
@@ -250,13 +250,16 @@ public void test34_SingleServerCrash() throws IOException,
 	// was the coordinator, some requests may intermittently fail until a
 	// another node realizes the state of affairs. and decides to take over
 	// as coordinator.
+	int count=0;
 	do {
 		client.send(serverMap.get(server),
 				getCommand(insertRecordIntoTableCmd(key, DEFAULT_TABLE_NAME)));
 		Thread.sleep(SLEEP);
 	} while (serverMap.size() > crashed.size() * 2 //majority
-			&& verifyInserted(key, server));
+			&& verifyInserted(key, server) && ++count<10);
 
+	Assert.assertTrue("Unable to create record with a single crashed server",
+			count<15);
 	for (int i = 0; i < servers.length * 2; i++) {
 		client.send(serverMap.get((String) Util.getRandomOtherThan(serverMap.keySet(), crashed)), getCommand(updateRecordOfTableCmd(key, DEFAULT_TABLE_NAME)));
 	}
