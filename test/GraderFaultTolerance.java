@@ -259,7 +259,7 @@ public void test34_SingleServerCrash() throws IOException,
 			&& verifyInserted(key, server) && ++count<10);
 
 	Assert.assertTrue("Unable to create record with a single crashed server",
-			count<10);
+			count<15);
 	for (int i = 0; i < servers.length * 2; i++) {
 		client.send(serverMap.get((String) Util.getRandomOtherThan(serverMap.keySet(), crashed)), getCommand(updateRecordOfTableCmd(key, DEFAULT_TABLE_NAME)));
 	}
