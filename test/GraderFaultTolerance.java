@@ -185,7 +185,7 @@ public void test32_GracefulExecutionMultipleRequestsSingleServer() throws IOExce
 	String server = servers[Math.abs(key % servers.length)];
 	client.send(serverMap.get(server), getCommand(insertRecordIntoTableCmd(key
 			, DEFAULT_TABLE_NAME)));
-
+	Thread.sleep(SLEEP);
 
 	// number of requests is arbitrary
 	for (int i = 0; i < servers.length * 2; i++) {
@@ -208,7 +208,7 @@ public void test33_GracefulExecutionMultipleRequestsToMultipleServers() throws I
 	String server = servers[Math.abs(key % servers.length)];
 	client.send(serverMap.get(server), getCommand(insertRecordIntoTableCmd(key
 			, DEFAULT_TABLE_NAME)));
-
+	Thread.sleep(SLEEP);
 
 	// number of requests is arbitrary
 	for (int i = 0; i < servers.length * 2; i++) {
