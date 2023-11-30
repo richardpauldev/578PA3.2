@@ -9,7 +9,6 @@ import edu.umass.cs.nio.interfaces.NodeConfig;
 import edu.umass.cs.nio.nioutils.NIOHeader;
 import edu.umass.cs.nio.nioutils.NodeConfigUtils;
 import edu.umass.cs.utils.RepeatRule;
-import org.json.JSONArray;
 import org.junit.*;
 import org.junit.rules.TestName;
 import org.junit.rules.TestWatcher;
@@ -18,7 +17,6 @@ import server.*;
 import server.faulttolerance.MyDBFaultTolerantServerZK;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
@@ -75,7 +73,7 @@ protected static final int SLEEP_RATIO = 10;
 // shouldn't be needed.
 protected static int SLEEP = Math.max(MAX_SLEEP,
 		MyDBFaultTolerantServerZK.SLEEP);
-public static final int PER_SERVER_BOOTSTRAP_TIME = MAX_SLEEP * 5;
+public static final int PER_SERVER_BOOTSTRAP_TIME = MAX_SLEEP * 6;
 /////////////////////// end of SLEEP params
 
 /* True means servers will be started as separate OS-level processes
@@ -218,6 +216,8 @@ protected void verifyTableExists(String table, String keyspace,
 	else Assert.assertFalse(match);
 }
 
+private boolean ALL_VALUES_NONEMPTY = false;
+
 protected void verifyOrderConsistent(String table, int key) {
 	verifyOrderConsistent(table, key, new HashSet<String>(), false);
 }
@@ -240,7 +240,7 @@ protected void verifyOrderConsistent(String table, Integer key,
 		if (!exclude.contains(servers[i])) comparedServers[j++] = servers[i];
 
 	int i = 0;
-	boolean nonEmpty = false;
+	boolean nonEmpty = false, nonEmptyValues = true;
 	ResultSet[] resultSets = new ResultSet[comparedServers.length];
 	Map<Integer,ArrayList<Integer>>[] tables = new Map[comparedServers.length];
 
@@ -257,18 +257,23 @@ protected void verifyOrderConsistent(String table, Integer key,
 				tables[i].putIfAbsent(key, new ArrayList<Integer>());
 				tables[i].put(key, new ArrayList<Integer>(row.getList("events",
 						Integer.class)));
-				nonEmpty = !tables[i].get(key).isEmpty();
+				nonEmpty = nonEmptyValues = !tables[i].get(key).isEmpty();
 			}
 			// entire table mode with each row a key:events_list pair
 			else {
 				int curKey = row.getInt(0);
 				tables[i].put(curKey,new ArrayList<Integer>(row.getList(1,
 						Integer.class)));
-				nonEmpty = !tables[i].get(curKey).isEmpty();
+				// at least one key has nonemptyvalues
+				nonEmpty = nonEmpty || (!tables[i].get(curKey).isEmpty());
+				// all keys have nonempty values
+				nonEmptyValues =
+						nonEmptyValues && (!tables[i].get(curKey).isEmpty());
 			}
 		}
 		i++;
 	}
+	if(ALL_VALUES_NONEMPTY) nonEmpty = nonEmpty && nonEmptyValues;
 
 	Map<Integer,ArrayList<Integer>> longest = tables[0];
 	int longestIndex = 0; boolean done = false;
@@ -502,6 +507,8 @@ protected static void startReplicatedServersSingleJVM(boolean FT) throws IOExcep
 	}
 }
 
+protected static boolean LOOP_MODE=false;
+
 @AfterClass
 public static void teardown() {
 	if (client != null) client.close();
@@ -514,6 +521,7 @@ public static void teardown() {
 			replicatedServers)
 		if (s != null) s.close();
 
+		if(!LOOP_MODE)
 	ServerFailureRecoveryManager.scheduler.shutdownNow();
 
 }
