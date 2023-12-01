@@ -483,6 +483,7 @@ public void test41_CheckpointRecoveryTest() throws IOException,
 		// requests.
 		Thread.sleep(10);
 	}
+	Thread.sleep(SLEEP*4);
 	int numCommittedEventsForFixedKeyBefore =
 			getMinNumCommittedEventsForFixedKey(fixedKeyKnownToExist);
 
