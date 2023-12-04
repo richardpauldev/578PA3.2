@@ -7,6 +7,7 @@ import edu.umass.cs.nio.nioutils.NIOHeader;
 import edu.umass.cs.nio.nioutils.NodeConfigUtils;
 import edu.umass.cs.utils.Util;
 import server.ReplicatedServer;
+import server.faulttolerance.MyDBFaultTolerantServerZK.ZooKeeperEventHandler;
 
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -25,6 +26,7 @@ import client.AVDBClient;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -77,7 +79,7 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 	public static final int DEFAULT_PORT = 2181;
 
 	private ZooKeeper zooKeeper;
-	private static final String ZOOKEEPER_HOST = "localhost:2181";
+	public static final String ZOOKEEPER_HOST = "localhost:2181";
 	private String currentZnodeName;
 
 	final private Session session;
@@ -106,41 +108,49 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 		return expected++;
 	}
 
+	public static final String REQUESTS_PARENT_NODE = "/clientRequests";
+
 	public class ZooKeeperEventHandler implements Watcher {
 		@Override
 		public void process(WatchedEvent event) {
+			System.out.print("\nZooKeeper Event Triggered: " + event);
 			try {
+				zooKeeper.getChildren(REQUESTS_PARENT_NODE, this);
 				switch (event.getType()) {
 					case NodeCreated:
+						log.log(Level.INFO, "Node Created: {0}", event.getPath());
 						onNodeCreated(event.getPath());
 						break;
 					case NodeDeleted:
+						log.log(Level.INFO, "Node Deleted: {0}", event.getPath());
 						onNodeDeleted(event.getPath());
 						break;
 					case NodeDataChanged:
+						log.log(Level.INFO, "Node Data Changed: {0}", event.getPath());
 						onNodeDataChanged(event.getPath());
 						break;
 					case NodeChildrenChanged:
+						log.log(Level.INFO, "Node Children Changed: {0}", event.getPath());
 						onNodeChildrenChange(event.getPath());
 						break;
 					default:
+						log.log(Level.WARNING, "Unhandled ZooKeeper Event: {0}", event);
 						break;
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (KeeperException | InterruptedException | IOException e) {
+				log.log(Level.SEVERE, "IOException in ZooKeeper EventHandler: {0}", e.getMessage());
 			}
 		}
 
 		private void onNodeChildrenChange(String path) {
+			handleNewRequests();
 		}
 
 		private void onNodeDataChanged(String path) {
 		}
 
 		private void onNodeDeleted(String path) throws IOException {
-			if (path.startsWith(ELECTION_NAMESPACE)) {
-				electLeader();
-			}
+
 		}
 
 		private void onNodeCreated(String path) {
@@ -153,6 +163,7 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 		PROPOSAL,
 		ACKNOWLEDEMENT;
 	}
+
 
 	/**
 	 * @param nodeConfig Server name/address configuration information read
@@ -193,221 +204,133 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 		log.log(Level.INFO, "Server {0} started on {1}",
 				new Object[] { this.myID, this.clientMessenger.getListeningSocketAddress() });
 
-		this.zooKeeper = new ZooKeeper(ZOOKEEPER_HOST, 3000, new ZooKeeperEventHandler());
+		this.zooKeeper = new ZooKeeper(ZOOKEEPER_HOST, 3000, null);
+		try {
+			if (zooKeeper.exists(REQUESTS_PARENT_NODE, false) == null) {
+				zooKeeper.create(REQUESTS_PARENT_NODE, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			}
 
-		electLeader();
+			zooKeeper.getChildren(REQUESTS_PARENT_NODE, new ZooKeeperEventHandler());
+		} catch (KeeperException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.print("\n" + myID + " up and operational :)");
+		handleNewRequests();
 	}
 
-	String ELECTION_NAMESPACE = "/election";
-
-	private void electLeader() throws IOException {
-		String electionZnodePath = ELECTION_NAMESPACE + "/" + myID;
+	protected void handleMessageFromClient(byte[] bytes, NIOHeader header) {
+		System.out.print("\nClient request: " + new String(bytes) + " to " + myID);
+		String pathPrefix = REQUESTS_PARENT_NODE + "/request-";
 		try {
-			String znodeFullPath = zooKeeper.create(electionZnodePath, new byte[] {}, ZooDefs.Ids.OPEN_ACL_UNSAFE,
-					CreateMode.EPHEMERAL_SEQUENTIAL);
+			String createdPath = zooKeeper.create(pathPrefix, bytes, ZooDefs.Ids.OPEN_ACL_UNSAFE,
+					CreateMode.PERSISTENT_SEQUENTIAL);
+			System.out.print("\nRequest Node Created: " + createdPath);
+		} catch (KeeperException | InterruptedException e) {
+			e.printStackTrace();
+			return;
+		}
+	}
 
-			this.currentZnodeName = znodeFullPath.replace(ELECTION_NAMESPACE + "/", "");
+	private Comparator<String> sequentialNodeComparator = new Comparator<String>() {
+		@Override
+		public int compare(String o1, String o2) {
+			Integer number1 = extractNumber(o1);
+			Integer number2 = extractNumber(o2);
+			return number1.compareTo(number2);
+		}
 
-			List<String> childrenNodes = zooKeeper.getChildren(ELECTION_NAMESPACE, false);
-			Collections.sort(childrenNodes);
-			int index = childrenNodes.indexOf(currentZnodeName);
-			if (index == 0) {
-				this.leader = myID;
-				// Any other leader stuff
-			} else {
-				String nodeToWatch = childrenNodes.get(index - 1);
-				zooKeeper.exists(ELECTION_NAMESPACE + "/" + nodeToWatch, new ZooKeeperEventHandler());
+		private Integer extractNumber(String nodeName) {
+			String numberPart = nodeName.substring(nodeName.lastIndexOf('-') + 1);
+			return Integer.parseInt(numberPart);
+		}
+	};
+
+	private void handleNewRequests() {
+		try {
+			List<String> requestNodes = zooKeeper.getChildren(REQUESTS_PARENT_NODE, false);
+			Collections.sort(requestNodes, sequentialNodeComparator);
+			System.out.print("\nHandling new requests, total count: " + requestNodes.size());
+
+			for (String requestNode : requestNodes) {
+				String fullPath = REQUESTS_PARENT_NODE + "/" + requestNode;
+				String serverNodePath = fullPath + "/" + myID;
+				try {
+					synchronized (this) {
+						if (zooKeeper.exists(fullPath, false) != null
+								&& zooKeeper.exists(serverNodePath, false) == null) {
+							byte[] requestData = zooKeeper.getData(fullPath, false, null);
+							session.execute(new String(requestData));
+							zooKeeper.create(serverNodePath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE,
+									CreateMode.PERSISTENT);
+							System.out.print("\nProcessed and Marked Request: " + fullPath);
+						}
+					}
+				} catch (KeeperException e) {
+					e.printStackTrace();
+				}
+			}
+
+		} catch (KeeperException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		if (Math.random() < .2) {
+			deleteProcessedRequests();
+		}
+	}
+
+	private void deleteProcessedRequests() {
+		try {
+			List<String> requestNodes = zooKeeper.getChildren(REQUESTS_PARENT_NODE, false);
+
+			for (String requestNode : requestNodes) {
+				String fullPath = REQUESTS_PARENT_NODE + "/" + requestNode;
+
+				synchronized (this) {
+					List<String> serverNodes = zooKeeper.getChildren(fullPath, false);
+
+					if (serverNodes.size() == serverMessenger.getNodeConfig().getNodeIDs().size()) {
+						for (String serverNode : serverNodes) {
+							zooKeeper.delete(fullPath + "/" + serverNode, -1);
+						}
+						zooKeeper.delete(fullPath, -1);
+						log.log(Level.INFO, "Deleted processed request node: {0}", fullPath);
+					}
+				}
 			}
 		} catch (KeeperException | InterruptedException e) {
-			throw new IOException("Unable to elect leader", e);
+			e.printStackTrace();
 		}
-	}
-	
-	protected void handleMessageFromClient(byte[] bytes, NIOHeader header) {
-				
-		// this is a request sent by callbackSend method
-		String request = new String(bytes);
-		
-		log.log(Level.INFO, "{0} received client message {1} from {2}",
-                new Object[]{this.myID, request, header.sndr});
-        JSONObject json = null;
-        try {
-            json = new JSONObject(request);
-            request = json.getString(AVDBClient.Keys.REQUEST
-                    .toString());
-        } catch (JSONException e) {
-            //e.printStackTrace();
-        }
-		
-		// forward the request to the leader as a proposal        
-		try {
-			JSONObject packet = new JSONObject();
-			packet.put(AVDBClient.Keys.REQUEST.toString(), request);
-			packet.put(AVDBClient.Keys.TYPE.toString(), Type.REQUEST.toString());			
-			
-			this.serverMessenger.send(leader, packet.toString().getBytes());
-			log.log(Level.INFO, "{0} sends a REQUEST {1} to {2}", 
-					new Object[]{this.myID, packet, leader});
-		} catch (IOException | JSONException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-        
-        
-        String response = "[success:"+new String(bytes)+"]";       
-        if(json!=null){
-        	try{
-        		json.put(AVDBClient.Keys.RESPONSE.toString(),
-                        response);
-                response = json.toString();
-            } catch (JSONException e) {
-                e.printStackTrace();
-        	}
-        }
-        
-        try{
-	        // when it's done send back response to client
-	        serverMessenger.send(header.sndr, response.getBytes());
-        } catch (IOException e) {
-        	e.printStackTrace();
-        }
 	}
 
 	protected void handleMessageFromServer(byte[] bytes, NIOHeader header) {
-		// deserialize the request
-		JSONObject json;
-		try {
-			json = new JSONObject(new String(bytes));
-		} catch (JSONException e) {
-			log.log(Level.SEVERE, "JSON parsing error", e);
-			return;
-		}
-
-		log.log(Level.INFO, "{0} received relayed message {1} from {2}",
-				new Object[] { this.myID, json, header.sndr }); // simply log
-
-		// check the type of the request
-		try {
-			String type = json.getString(AVDBClient.Keys.TYPE.toString());
-			if (type.equals(Type.REQUEST.toString())) {
-				if (myID.equals(leader)) {
-
-					// put the request into the queue
-					Long reqId = incrReqNum();
-					json.put(AVDBClient.Keys.REQNUM.toString(), reqId);
-					queue.put(reqId, json);
-					log.log(Level.INFO, "{0} put request {1} into the queue.",
-							new Object[] { this.myID, json });
-
-					if (isReadyToSend(expected)) {
-						// retrieve the first request in the queue
-						JSONObject proposal = queue.remove(expected);
-						if (proposal != null) {
-							proposal.put(AVDBClient.Keys.TYPE.toString(), Type.PROPOSAL.toString());
-							enqueue();
-							broadcastRequest(proposal);
-						} else {
-							log.log(Level.INFO,
-									"{0} is ready to send request {1}, but the message has already been retrieved.",
-									new Object[] { this.myID, expected });
-						}
-
-					}
-				} else {
-					log.log(Level.SEVERE, "{0} received REQUEST message from {1} which should not be here.",
-							new Object[] { this.myID, header.sndr });
-				}
-			} else if (type.equals(Type.PROPOSAL.toString())) {
-
-				// execute the query and send back the acknowledgement
-				String query = json.getString(AVDBClient.Keys.REQUEST.toString());
-				long reqId = json.getLong(AVDBClient.Keys.REQNUM.toString());
-
-				session.execute(query);
-
-				JSONObject response = new JSONObject().put(AVDBClient.Keys.RESPONSE.toString(), this.myID)
-						.put(AVDBClient.Keys.REQNUM.toString(), reqId)
-						.put(AVDBClient.Keys.TYPE.toString(), Type.ACKNOWLEDEMENT.toString());
-				serverMessenger.send(header.sndr, response.toString().getBytes());
-			} else if (type.equals(Type.ACKNOWLEDEMENT.toString())) {
-
-				// only the leader needs to handle acknowledgement
-				if (myID.equals(leader)) {
-					// TODO: leader processes ack here
-					String node = json.getString(AVDBClient.Keys.RESPONSE.toString());
-					if (dequeue(node)) {
-						// if the leader has received all acks, then prepare to send the next request
-						expected++;
-						if (isReadyToSend(expected)) {
-							JSONObject proposal = queue.remove(expected);
-							if (proposal != null) {
-								proposal.put(AVDBClient.Keys.TYPE.toString(), Type.PROPOSAL.toString());
-								enqueue();
-								broadcastRequest(proposal);
-							} else {
-								log.log(Level.INFO,
-										"{0} is ready to send request {1}, but the message has already been retrieved.",
-										new Object[] { this.myID, expected });
-							}
-						}
-					}
-				} else {
-					log.log(Level.SEVERE, "{0} received ACKNOWLEDEMENT message from {1} which should not be here.",
-							new Object[] { this.myID, header.sndr });
-				}
-			} else {
-				log.log(Level.SEVERE, "{0} received unrecongonized message from {1} which should not be here.",
-						new Object[] { this.myID, header.sndr });
-			}
-
-		} catch (JSONException | IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
 	}
 
-	private boolean isReadyToSend(long expectedId) {
-		if (queue.size() > 0 && queue.containsKey(expectedId)) {
-			return true;
-		}
-		return false;
-	}
-
-	private void broadcastRequest(JSONObject req) {
-		for (String node : this.serverMessenger.getNodeConfig().getNodeIDs()) {
-			try {
-				this.serverMessenger.send(node, req.toString().getBytes());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		log.log(Level.INFO, "The leader has broadcast the request {0}", new Object[] { req });
-	}
-
-	private void enqueue() {
-		notAcked = new CopyOnWriteArrayList<String>();
-		for (String node : this.serverMessenger.getNodeConfig().getNodeIDs()) {
-			notAcked.add(node);
-		}
-	}
-
-	private boolean dequeue(String node) {
-		if (!notAcked.remove(node)) {
-			log.log(Level.SEVERE, "The leader does not have the key {0} in its notAcked", new Object[] { node });
-		}
-		if (notAcked.size() == 0)
-			return true;
-		return false;
-	}
-
-	/**
-	 * TODO: ZooKeeper changes
-	 */
 	public void close() {
 		super.close();
 		this.serverMessenger.stop();
 		session.close();
 		cluster.close();
+		deleteNodeRecursively(zooKeeper, REQUESTS_PARENT_NODE);
+		try {
+			zooKeeper.close();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void deleteNodeRecursively(ZooKeeper zooKeeper, String nodePath) {
+		try {
+			List<String> children = zooKeeper.getChildren(nodePath, false);
+			for (String child : children) {
+				deleteNodeRecursively(zooKeeper, nodePath + "/" + child);
+			}
+			zooKeeper.delete(nodePath, -1); // -1 matches any version for deletion
+		} catch (KeeperException.NoNodeException e) {
+			// Node already deleted, ignore
+		} catch (KeeperException | InterruptedException e) {
+			e.printStackTrace();
+			// Log or handle the exception as needed
+		}
 	}
 
 	public static enum CheckpointRecovery {
