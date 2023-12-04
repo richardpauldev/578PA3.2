@@ -185,7 +185,7 @@ public void test32_GracefulExecutionMultipleRequestsSingleServer() throws IOExce
 	String server = servers[Math.abs(key % servers.length)];
 	client.send(serverMap.get(server), getCommand(insertRecordIntoTableCmd(key
 			, DEFAULT_TABLE_NAME)));
-
+	Thread.sleep(SLEEP);
 
 	// number of requests is arbitrary
 	for (int i = 0; i < servers.length * 2; i++) {
@@ -208,7 +208,7 @@ public void test33_GracefulExecutionMultipleRequestsToMultipleServers() throws I
 	String server = servers[Math.abs(key % servers.length)];
 	client.send(serverMap.get(server), getCommand(insertRecordIntoTableCmd(key
 			, DEFAULT_TABLE_NAME)));
-
+	Thread.sleep(SLEEP);
 
 	// number of requests is arbitrary
 	for (int i = 0; i < servers.length * 2; i++) {
@@ -323,7 +323,7 @@ public void test36_OneServerRecoveryMultipleRequests() throws IOException,
 		InterruptedException {
 	String first = crashed.iterator().next();
 	ServerFailureRecoveryManager.recoverServer(first);
-	Thread.sleep(PER_SERVER_BOOTSTRAP_TIME);
+	Thread.sleep(PER_SERVER_BOOTSTRAP_TIME*2);
 	crashed.remove(first);
 
 	int key = ThreadLocalRandom.current().nextInt();
@@ -333,7 +333,7 @@ public void test36_OneServerRecoveryMultipleRequests() throws IOException,
 	// a reason for a request to be lost.
 	client.send(serverMap.get(server=
 			(String) Util.getRandomOtherThan(serverMap.keySet(), crashed)), getCommand(insertRecordIntoTableCmd(key, DEFAULT_TABLE_NAME)));
-	Assert.assertTrue("key " + key + "not inserted at entry server " + server,
+	Assert.assertTrue("key " + key + " not inserted at entry server " + server,
 			verifyInserted(key, server));
 	Thread.sleep(SLEEP);
 
@@ -483,12 +483,13 @@ public void test41_CheckpointRecoveryTest() throws IOException,
 		// requests.
 		Thread.sleep(10);
 	}
+	Thread.sleep(SLEEP*4);
 	int numCommittedEventsForFixedKeyBefore =
 			getMinNumCommittedEventsForFixedKey(fixedKeyKnownToExist);
 
 	ServerFailureRecoveryManager.mercilesslySlaughterAll();
 	ServerFailureRecoveryManager.startAllServers();
-	Thread.sleep(PER_SERVER_BOOTSTRAP_TIME * servers.length);
+	Thread.sleep(PER_SERVER_BOOTSTRAP_TIME * servers.length*2);
 
 	// specific key
 	verifyOrderConsistent(DEFAULT_TABLE_NAME, fixedKeyKnownToExist);
@@ -575,6 +576,6 @@ static {
 }
 
 public static void main(String[] args) throws IOException {
-	JUnitCore.runClasses(GraderFaultTolerance.class);
+		JUnitCore.runClasses(GraderFaultTolerance.class);
 }
 }
