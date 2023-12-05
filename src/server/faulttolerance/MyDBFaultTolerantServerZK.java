@@ -7,25 +7,17 @@ import edu.umass.cs.nio.nioutils.NIOHeader;
 import edu.umass.cs.nio.nioutils.NodeConfigUtils;
 import edu.umass.cs.utils.Util;
 import server.ReplicatedServer;
-// import server.faulttolerance.MyDBFaultTolerantServerZK.ZooKeeperEventHandler;
 
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
-import org.json.JSONObject;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 
-import client.AVDBClient;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -82,7 +74,6 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 
 	private ZooKeeper zooKeeper;
 	public static final String ZOOKEEPER_HOST = "localhost:2181";
-	private String currentZnodeName;
 
 	final private Session session;
 	final private Cluster cluster;
@@ -91,10 +82,6 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 	protected final MessageNIOTransport<String, String> serverMessenger;
 
 	protected String leader;
-
-	// this is the message queue used to track which messages have not been sent yet
-	private ConcurrentHashMap<Long, JSONObject> queue = new ConcurrentHashMap<Long, JSONObject>();
-	private CopyOnWriteArrayList<String> notAcked;
 
 	// the sequencer to track the most recent request in the queue
 	private static long reqnum = 0;
@@ -113,55 +100,6 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 	}
 
 	public static final String REQUESTS_PARENT_NODE = "/clientRequests";
-
-	// public class ZooKeeperEventHandler implements Watcher {
-	// @Override
-	// public void process(WatchedEvent event) {
-	// System.out.print("\nZooKeeper Event Triggered: " + event);
-	// try {
-	// zooKeeper.getChildren(REQUESTS_PARENT_NODE, this);
-	// switch (event.getType()) {
-	// case NodeCreated:
-	// mylog.log(Level.INFO, "Node Created: {0}", event.getPath());
-	// onNodeCreated(event.getPath());
-	// break;
-	// case NodeDeleted:
-	// mylog.log(Level.INFO, "Node Deleted: {0}", event.getPath());
-	// onNodeDeleted(event.getPath());
-	// break;
-	// case NodeDataChanged:
-	// mylog.log(Level.INFO, "Node Data Changed: {0}", event.getPath());
-	// onNodeDataChanged(event.getPath());
-	// break;
-	// case NodeChildrenChanged:
-	// mylog.log(Level.INFO, "Node Children Changed: {0}", event.getPath());
-	// onNodeChildrenChange(event.getPath());
-	// break;
-	// default:
-	// mylog.log(Level.WARNING, "Unhandled ZooKeeper Event: {0}", event);
-	// break;
-	// }
-	// } catch (KeeperException | InterruptedException | IOException e) {
-	// mylog.log(Level.SEVERE, "IOException in ZooKeeper EventHandler: {0}",
-	// e.getMessage());
-	// }
-	// }
-
-	// private void onNodeChildrenChange(String path) {
-	// handleNewRequests();
-	// }
-
-	// private void onNodeDataChanged(String path) {
-	// }
-
-	// private void onNodeDeleted(String path) throws IOException {
-
-	// }
-
-	// private void onNodeCreated(String path) {
-	// }
-
-	// }
 
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -227,8 +165,8 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 		} catch (KeeperException | InterruptedException e) {
 			e.printStackTrace();
 		}
-		System.out.print("\n" + myID + " up and operational :)");
 		scheduler.scheduleAtFixedRate(this::handleNewRequests, 0, 10, TimeUnit.MILLISECONDS);
+		mylog.log(Level.INFO, "{0} up and operational :)", myID);
 	}
 
 	protected void handleMessageFromClient(byte[] bytes, NIOHeader header) {
@@ -243,11 +181,6 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 			e.printStackTrace();
 			return;
 		}
-	}
-
-	private static int reqStrToNum(String nodeName) {
-		String numberPart = nodeName.substring(nodeName.lastIndexOf('-') + 1);
-		return Integer.parseInt(numberPart);
 	}
 
 	private static String reqNumToStr(int num) {
@@ -285,49 +218,6 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 				InterruptedException e) {
 			e.printStackTrace();
 		}
-		if (Math.random() < .2) {
-			// deleteProcessedRequests();
-		}
-	}
-
-	private void deleteProcessedRequests() {
-		try {
-			List<String> requestNodes = zooKeeper.getChildren(REQUESTS_PARENT_NODE, false);
-
-			for (String requestNode : requestNodes) {
-				String fullPath = REQUESTS_PARENT_NODE + "/" + requestNode;
-
-				lock.lock();
-				try {
-					List<String> serverNodes = zooKeeper.getChildren(fullPath, false);
-
-					if (serverNodes.size() == serverMessenger.getNodeConfig().getNodeIDs().size()) {
-						for (String serverNode : serverNodes) {
-							try {
-								zooKeeper.delete(fullPath + "/" + serverNode, -1);
-								mylog.log(Level.INFO, "{0} deletes mark {1}",
-										new Object[] { myID, fullPath + "/" + serverNode });
-							} catch (KeeperException.NoNodeException e) {
-								mylog.log(Level.INFO, "{0} this mark has already been deleted: {1}",
-										new Object[] { myID, fullPath + "/" + serverNode });
-							}
-						}
-						try {
-							zooKeeper.delete(fullPath, -1);
-							mylog.log(Level.INFO, "{0} deleted processed request node: {1}",
-									new Object[] { myID, fullPath });
-						} catch (KeeperException.NoNodeException e) {
-							mylog.log(Level.INFO, "{0} this request has already been deleted: {1}",
-									new Object[] { myID, fullPath });
-						}
-					}
-				} finally {
-					lock.unlock();
-				}
-			}
-		} catch (KeeperException | InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 
 	protected void handleMessageFromServer(byte[] bytes, NIOHeader header) {
@@ -338,7 +228,7 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 		this.serverMessenger.stop();
 		session.close();
 		cluster.close();
-		deleteNodeRecursively(zooKeeper, REQUESTS_PARENT_NODE);
+		// deleteNodeRecursively(zooKeeper, REQUESTS_PARENT_NODE);
 		try {
 			zooKeeper.close();
 		} catch (InterruptedException e) {
@@ -347,24 +237,23 @@ public class MyDBFaultTolerantServerZK extends server.MyDBSingleServer {
 		scheduler.shutdown();
 	}
 
-	public static void deleteNodeRecursively(ZooKeeper zooKeeper, String nodePath) {
+	public static void deleteNodeRecursively(ZooKeeper zooKeeper, String nodePath) { // Helper method for testing 
 		try {
 			List<String> children = zooKeeper.getChildren(nodePath, false);
 			for (String child : children) {
 				deleteNodeRecursively(zooKeeper, nodePath + "/" + child);
 			}
-			zooKeeper.delete(nodePath, -1); // -1 matches any version for deletion
+			zooKeeper.delete(nodePath, -1); 
 		} catch (KeeperException.NoNodeException e) {
 			// Node already deleted, ignore
 		} catch (KeeperException | InterruptedException e) {
 			e.printStackTrace();
-			// Log or handle the exception as needed
 		}
 	}
 
-	// public static enum CheckpointRecovery {
-	// CHECKPOINT, RESTORE;
-	// }
+	public static enum CheckpointRecovery { // not sure if this checked for, so I left it in. Doesn't do anything
+		CHECKPOINT, RESTORE;
+	}
 
 	/**
 	 * @param args args[0] must be server.properties file and args[1] must be
